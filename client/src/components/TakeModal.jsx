@@ -61,7 +61,7 @@ export default function TakeModal({ product, isOpen, onClose, onConfirm }) {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>{t('claim_title')}</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>{t('claim_title')}</h2>
             <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
               {t('claim_desc')}
             </p>
@@ -101,7 +101,7 @@ export default function TakeModal({ product, isOpen, onClose, onConfirm }) {
           padding: '12px 14px',
           marginBottom: '16px',
         }}>
-          <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff', marginBottom: '2px' }}>
+          <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>
             {product.name}
           </div>
           <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginBottom: '10px' }}>
@@ -143,7 +143,7 @@ export default function TakeModal({ product, isOpen, onClose, onConfirm }) {
                 {t('qty_to_claim')} ({unitLabel}) *
               </label>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                {t('balance_after')} <strong style={{ color: leftAfter === '0' || leftAfter === '0.00' ? '#ef4444' : '#fff' }}>{leftAfter} {unitLabel}</strong>
+                {t('balance_after')} <strong style={{ color: leftAfter === '0' || leftAfter === '0.00' ? '#ef4444' : 'var(--text-primary)' }}>{leftAfter} {unitLabel}</strong>
               </span>
             </div>
 

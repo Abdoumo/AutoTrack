@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function LoginScreen() {
   const { login } = useAuth();
   const { lang, toggleLanguage, t } = useLanguage();
+  const { isDark, toggleTheme } = useTheme();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [name, setName] = useState('');
@@ -58,6 +60,7 @@ export default function LoginScreen() {
       flexDirection: 'column',
       background: 'var(--bg-app)',
       padding: '16px',
+      transition: 'background 0.2s ease',
     }}>
       {/* Top Header Bar */}
       <header style={{
@@ -82,10 +85,10 @@ export default function LoginScreen() {
             fontSize: '15px',
             fontWeight: '700',
             letterSpacing: '-0.02em',
-            color: '#fff',
+            color: 'var(--text-primary)',
             textTransform: 'uppercase',
           }}>
-            Aura<span style={{ color: '#818cf8' }}>Track</span>
+            Aura<span style={{ color: '#5d5fef' }}>Track</span>
           </span>
           <span style={{
             fontSize: '9px',
@@ -99,23 +102,57 @@ export default function LoginScreen() {
           </span>
         </div>
 
-        {/* Language Switcher */}
-        <button
-          id="login-lang-toggle"
-          onClick={toggleLanguage}
-          style={{
-            padding: '5px 10px',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '11px',
-            fontWeight: '700',
-            background: 'var(--bg-surface-elevated)',
-            border: '1px solid var(--border-subtle)',
-            color: '#fff',
-            letterSpacing: '0.04em',
-          }}
-        >
-          {lang === 'fr' ? 'FR' : 'EN'}
-        </button>
+        {/* Header Right Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Theme Switcher */}
+          <button
+            id="login-theme-toggle"
+            onClick={toggleTheme}
+            title={t('theme_toggle')}
+            style={{
+              padding: '5px 9px',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '11px',
+              fontWeight: '700',
+              background: 'var(--bg-surface-elevated)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-primary)',
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <span style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              background: isDark ? '#fbbf24' : '#6366f1',
+              display: 'inline-block'
+            }} />
+            <span>{isDark ? t('theme_light') : t('theme_dark')}</span>
+          </button>
+
+          {/* Language Switcher */}
+          <button
+            id="login-lang-toggle"
+            onClick={toggleLanguage}
+            style={{
+              padding: '5px 10px',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '11px',
+              fontWeight: '700',
+              background: 'var(--bg-surface-elevated)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-primary)',
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+            }}
+          >
+            {lang === 'fr' ? 'FR' : 'EN'}
+          </button>
+        </div>
       </header>
 
       {/* Centered Auth Gate Card */}
@@ -130,7 +167,7 @@ export default function LoginScreen() {
           background: 'var(--bg-surface)',
           border: '1px solid var(--border-medium)',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: '0 20px 48px rgba(0, 0, 0, 0.6)',
+          boxShadow: isDark ? '0 20px 48px rgba(0, 0, 0, 0.6)' : '0 12px 32px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.05)',
           width: '100%',
           maxWidth: '400px',
           padding: '28px 24px',
@@ -138,7 +175,7 @@ export default function LoginScreen() {
         }}>
           {/* Card Title */}
           <div style={{ textAlign: 'center', marginBottom: '22px' }}>
-            <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', letterSpacing: '-0.01em' }}>
+            <h1 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
               {mode === 'login' ? t('auth_welcome_login') : t('auth_welcome_register')}
             </h1>
             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>

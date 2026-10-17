@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ activeTab, setActiveTab, onOpenCapture, criticalCount, warningCount }) {
   const { user, isAdmin, logout, toggleRole } = useAuth();
   const { lang, toggleLanguage, t } = useLanguage();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleNavClick = (tab) => {
@@ -19,13 +21,14 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
 
   return (
     <header style={{
-      background: 'rgba(12, 14, 20, 0.94)',
+      background: 'var(--bg-surface)',
       backdropFilter: 'blur(16px)',
       borderBottom: '1px solid var(--border-subtle)',
       position: 'sticky',
       top: 0,
       zIndex: 100,
       width: '100%',
+      transition: 'background 0.2s ease, border-color 0.2s ease',
     }}>
       <div style={{
         maxWidth: '1360px',
@@ -58,10 +61,10 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
               fontSize: '15px',
               fontWeight: '700',
               letterSpacing: '-0.02em',
-              color: '#fff',
+              color: 'var(--text-primary)',
               textTransform: 'uppercase',
             }}>
-              Aura<span style={{ color: '#818cf8' }}>Track</span>
+              Aura<span style={{ color: '#5d5fef' }}>Track</span>
             </span>
             <span style={{
               fontSize: '9px',
@@ -85,8 +88,8 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
                 borderRadius: 'var(--radius-sm)',
                 fontSize: '12px',
                 fontWeight: activeTab === 'feed' ? '600' : '500',
-                background: activeTab === 'feed' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                color: activeTab === 'feed' ? '#fff' : 'var(--text-secondary)',
+                background: activeTab === 'feed' ? 'var(--accent-subtle)' : 'transparent',
+                color: activeTab === 'feed' ? 'var(--accent-primary)' : 'var(--text-secondary)',
                 border: activeTab === 'feed' ? '1px solid var(--border-medium)' : '1px solid transparent',
               }}
             >
@@ -104,8 +107,8 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
                     borderRadius: 'var(--radius-sm)',
                     fontSize: '12px',
                     fontWeight: activeTab === 'users' ? '600' : '500',
-                    background: activeTab === 'users' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                    color: activeTab === 'users' ? '#fff' : 'var(--text-secondary)',
+                    background: activeTab === 'users' ? 'var(--accent-subtle)' : 'transparent',
+                    color: activeTab === 'users' ? 'var(--accent-primary)' : 'var(--text-secondary)',
                     border: activeTab === 'users' ? '1px solid var(--border-medium)' : '1px solid transparent',
                   }}
                 >
@@ -120,8 +123,8 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
                     borderRadius: 'var(--radius-sm)',
                     fontSize: '12px',
                     fontWeight: activeTab === 'admin' ? '600' : '500',
-                    background: activeTab === 'admin' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                    color: activeTab === 'admin' ? '#fff' : 'var(--text-secondary)',
+                    background: activeTab === 'admin' ? 'var(--accent-subtle)' : 'transparent',
+                    color: activeTab === 'admin' ? 'var(--accent-primary)' : 'var(--text-secondary)',
                     border: activeTab === 'admin' ? '1px solid var(--border-medium)' : '1px solid transparent',
                     display: 'flex',
                     alignItems: 'center',
@@ -148,6 +151,36 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
 
           {/* Desktop Right Actions */}
           <div className="nav-desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            {/* Theme Switcher */}
+            <button
+              id="theme-toggle-btn"
+              onClick={toggleTheme}
+              title={t('theme_toggle')}
+              style={{
+                padding: '5px 9px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '11px',
+                fontWeight: '700',
+                background: 'var(--bg-surface-elevated)',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-primary)',
+                letterSpacing: '0.04em',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <span style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: isDark ? '#fbbf24' : '#6366f1',
+                display: 'inline-block'
+              }} />
+              <span>{isDark ? t('theme_light') : t('theme_dark')}</span>
+            </button>
+
             {/* Language Switcher */}
             <button
               id="lang-toggle-btn"
@@ -160,7 +193,7 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
                 fontWeight: '700',
                 background: 'var(--bg-surface-elevated)',
                 border: '1px solid var(--border-subtle)',
-                color: '#fff',
+                color: 'var(--text-primary)',
                 letterSpacing: '0.04em',
               }}
             >
@@ -195,7 +228,7 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
                 }}
               >
                 <span className={`status-dot ${isAdmin ? 'status-dot-active' : 'status-dot-muted'}`} />
-                <span style={{ fontSize: '11px', fontWeight: '600', color: isAdmin ? '#818cf8' : '#cbd5e1' }}>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: isAdmin ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
                   {isAdmin ? t('admin_role') : t('user_role')}
                 </span>
               </div>
@@ -240,8 +273,8 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '14px',
                   fontWeight: activeTab === 'feed' ? '700' : '500',
-                  background: activeTab === 'feed' ? 'rgba(93, 95, 239, 0.15)' : 'transparent',
-                  color: activeTab === 'feed' ? '#818cf8' : '#fff',
+                  background: activeTab === 'feed' ? 'var(--accent-subtle)' : 'transparent',
+                  color: activeTab === 'feed' ? 'var(--accent-primary)' : 'var(--text-primary)',
                   border: '1px solid var(--border-subtle)',
                   textAlign: 'left',
                   display: 'flex',
@@ -263,8 +296,8 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
                       borderRadius: 'var(--radius-sm)',
                       fontSize: '14px',
                       fontWeight: activeTab === 'users' ? '700' : '500',
-                      background: activeTab === 'users' ? 'rgba(93, 95, 239, 0.15)' : 'transparent',
-                      color: activeTab === 'users' ? '#818cf8' : '#fff',
+                      background: activeTab === 'users' ? 'var(--accent-subtle)' : 'transparent',
+                      color: activeTab === 'users' ? 'var(--accent-primary)' : 'var(--text-primary)',
                       border: '1px solid var(--border-subtle)',
                       textAlign: 'left',
                       display: 'flex',
@@ -284,8 +317,8 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
                       borderRadius: 'var(--radius-sm)',
                       fontSize: '14px',
                       fontWeight: activeTab === 'admin' ? '700' : '500',
-                      background: activeTab === 'admin' ? 'rgba(93, 95, 239, 0.15)' : 'transparent',
-                      color: activeTab === 'admin' ? '#818cf8' : '#fff',
+                      background: activeTab === 'admin' ? 'var(--accent-subtle)' : 'transparent',
+                      color: activeTab === 'admin' ? 'var(--accent-primary)' : 'var(--text-primary)',
                       border: '1px solid var(--border-subtle)',
                       textAlign: 'left',
                       display: 'flex',
@@ -311,20 +344,36 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
               )}
             </div>
 
-            {/* Mobile Actions: Capture & Language */}
+            {/* Mobile Actions: Capture, Language & Theme */}
             <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
               <button
                 onClick={handleCaptureClick}
                 className="btn btn-primary"
-                style={{ flex: 1, padding: '10px' }}
+                style={{ flex: 2, padding: '10px' }}
               >
                 {t('capture')}
               </button>
 
               <button
+                id="mobile-theme-toggle-btn"
+                onClick={toggleTheme}
+                className="btn btn-secondary"
+                style={{ flex: 1, padding: '10px 8px', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+              >
+                <span style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: isDark ? '#fbbf24' : '#6366f1',
+                  display: 'inline-block'
+                }} />
+                <span>{isDark ? t('theme_light') : t('theme_dark')}</span>
+              </button>
+
+              <button
                 onClick={toggleLanguage}
                 className="btn btn-secondary"
-                style={{ padding: '10px 16px', fontWeight: '700' }}
+                style={{ padding: '10px 14px', fontWeight: '700' }}
               >
                 {lang === 'fr' ? 'FR' : 'EN'}
               </button>
@@ -344,11 +393,11 @@ export default function Navbar({ activeTab, setActiveTab, onOpenCapture, critica
               <div onClick={toggleRole} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span className={`status-dot ${isAdmin ? 'status-dot-active' : 'status-dot-muted'}`} />
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
                     {user?.name || user?.email}
                   </span>
                 </div>
-                <span style={{ fontSize: '10px', color: isAdmin ? '#818cf8' : 'var(--text-muted)' }}>
+                <span style={{ fontSize: '10px', color: isAdmin ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
                   {isAdmin ? t('admin_role') : t('user_role')} (Toucher pour basculer)
                 </span>
               </div>

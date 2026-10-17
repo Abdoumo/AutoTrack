@@ -15,6 +15,9 @@ export const translations = {
     register: 'Inscription',
     admin_role: 'Administrateur',
     user_role: 'Utilisateur',
+    theme_light: 'Clair',
+    theme_dark: 'Sombre',
+    theme_toggle: 'Changer de thème',
 
     // Alert Banner
     day10_alert_tag: 'Jour 10 Expiré',
@@ -146,6 +149,9 @@ export const translations = {
     register: 'Register',
     admin_role: 'Admin',
     user_role: 'User',
+    theme_light: 'Light',
+    theme_dark: 'Dark',
+    theme_toggle: 'Toggle Theme',
 
     // Alert Banner
     day10_alert_tag: 'Day 10 Overdue',

@@ -82,7 +82,7 @@ export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjus
         </div>
 
         {/* Product Title */}
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', lineHeight: 1.35, marginBottom: '6px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', lineHeight: 1.35, marginBottom: '6px' }}>
           {product.name}
         </h3>
 
@@ -113,7 +113,7 @@ export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjus
             <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               {t('stock_available')}
             </span>
-            <span style={{ fontSize: '13px', fontWeight: '700', color: remaining > 0 ? '#fff' : 'var(--text-muted)' }}>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: remaining > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
               {remaining} / {initialQty} {unitLabel}
             </span>
           </div>
@@ -122,7 +122,7 @@ export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjus
           <div style={{
             width: '100%',
             height: '4px',
-            background: 'rgba(255, 255, 255, 0.08)',
+            background: 'var(--border-subtle)',
             borderRadius: '999px',
             overflow: 'hidden',
           }}>

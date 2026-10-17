@@ -33,7 +33,7 @@ export default function RiskAdjustModal({ product, isOpen, onClose, onSave }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }}>Modify Risk Threshold</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Modify Risk Threshold</h3>
             <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Admin control for shelf-life deadline.</p>
           </div>
           <button 
@@ -45,7 +45,7 @@ export default function RiskAdjustModal({ product, isOpen, onClose, onSave }) {
         </div>
 
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
-          Adjusting expiration date for <strong style={{ color: '#fff' }}>{product.name}</strong>.
+          Adjusting expiration date for <strong style={{ color: 'var(--text-primary)' }}>{product.name}</strong>.
         </p>
 
         <form onSubmit={handleSubmit}>

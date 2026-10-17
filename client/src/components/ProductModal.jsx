@@ -96,7 +96,7 @@ export default function ProductModal({ isOpen, onClose, onSave, editingProduct =
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>
               {editingProduct ? t('modal_edit_title') : t('modal_capture_title')}
             </h2>
             <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
