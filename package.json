@@ -1,0 +1,11 @@
+{
+  "name": "auratrack-pern-app",
+  "version": "1.0.0",
+  "description": "PERN stack product capture, lifecycle risk management & admin CSV export system",
+  "scripts": {
+    "server": "npm --prefix server start",
+    "client": "npm --prefix client dev",
+    "seed": "npm --prefix server run seed"
+  }
+}
+git 
