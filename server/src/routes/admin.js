@@ -116,4 +116,34 @@ router.get('/alerts', auth, adminOnly, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/admin/send-test-email
+ * Dispatch a test alert email to verify Gmail credentials and view the design
+ */
+router.post('/send-test-email', auth, adminOnly, async (req, res) => {
+  const { sendTestEmail } = require('../services/emailService');
+  try {
+    const { targetEmail } = req.body || {};
+    const result = await sendTestEmail(targetEmail);
+    res.json({ success: true, message: 'Email de test envoyé avec succès.', result });
+  } catch (err) {
+    console.error('Send test email error:', err.message);
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/verify-email
+ * Verify SMTP transport connectivity
+ */
+router.get('/verify-email', auth, adminOnly, async (req, res) => {
+  const { verifyConnection } = require('../services/emailService');
+  try {
+    const result = await verifyConnection();
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

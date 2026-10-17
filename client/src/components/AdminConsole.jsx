@@ -89,6 +89,30 @@ export default function AdminConsole({ products, onRefreshProducts }) {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <a
+            id="preview-day7-email-link"
+            href="/previews/day7.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+            style={{ fontSize: '12px', padding: '6px 12px', textDecoration: 'none' }}
+            title="Ouvrir le modèle d'email Jour 7 dans un nouvel onglet"
+          >
+            {t('preview_day7')} ↗
+          </a>
+
+          <a
+            id="preview-day10-email-link"
+            href="/previews/day10.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+            style={{ fontSize: '12px', padding: '6px 12px', textDecoration: 'none' }}
+            title="Ouvrir le modèle d'email Jour 10 dans un nouvel onglet"
+          >
+            {t('preview_day10')} ↗
+          </a>
+
           <button
             onClick={loadTransactions}
             className="btn btn-secondary"
