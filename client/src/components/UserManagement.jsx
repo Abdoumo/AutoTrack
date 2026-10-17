@@ -137,7 +137,7 @@ export default function UserManagement() {
           }}>
             Identités & Analyse Comportementale
           </span>
-          <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', letterSpacing: '-0.02em', marginTop: '2px' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.02em', marginTop: '2px' }}>
             {t('user_analytics_title')}
           </h1>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
@@ -183,7 +183,7 @@ export default function UserManagement() {
           gap: '10px',
         }}>
           <div>
-            <h2 style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
               {t('registered_accounts')}
             </h2>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -226,7 +226,7 @@ export default function UserManagement() {
                 {filteredUsers.map((u) => (
                   <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                     <td style={{ padding: '12px 14px' }}>
-                      <div style={{ fontWeight: '600', color: '#fff' }}>{u.name}</div>
+                      <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{u.name}</div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{u.email}</div>
                     </td>
 
@@ -237,7 +237,7 @@ export default function UserManagement() {
                       </span>
                     </td>
 
-                    <td style={{ padding: '12px 14px', color: '#fff', fontWeight: '500' }}>
+                    <td style={{ padding: '12px 14px', color: 'var(--text-primary)', fontWeight: '500' }}>
                       {u.products_created_count || 0}
                     </td>
 
@@ -298,7 +298,7 @@ export default function UserManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>
                   {editingUser ? t('modal_edit_user') : t('modal_create_user')}
                 </h3>
               </div>
@@ -411,7 +411,7 @@ export default function UserManagement() {
                 <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#818cf8', textTransform: 'uppercase' }}>
                   {t('audit_user_activity')}
                 </span>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#fff', marginTop: '2px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>
                   {activityUser.name} ({activityUser.email})
                 </h3>
               </div>
@@ -437,14 +437,14 @@ export default function UserManagement() {
                 }}>
                   <div style={{ background: 'var(--bg-input)', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                     <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('metric_captured')}</span>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff', marginTop: '2px' }}>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>
                       {userActivity.summary.total_products_created}
                     </div>
                   </div>
 
                   <div style={{ background: 'var(--bg-input)', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                     <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('metric_claims')}</span>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff', marginTop: '2px' }}>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>
                       {userActivity.summary.total_claims_made}
                     </div>
                   </div>
@@ -458,7 +458,7 @@ export default function UserManagement() {
                 </div>
 
                 <div style={{ marginBottom: '18px' }}>
-                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: '#fff', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {t('claims_history')}
                   </h4>
                   {userActivity.transactions.length === 0 ? (
@@ -479,7 +479,7 @@ export default function UserManagement() {
                           fontSize: '11px',
                         }}>
                           <div>
-                            <span style={{ fontWeight: '600', color: '#fff' }}>{transItem.product_name}</span>
+                            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{transItem.product_name}</span>
                             <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>
                               {new Date(transItem.taken_at).toLocaleDateString()}
                             </span>
@@ -500,7 +500,7 @@ export default function UserManagement() {
                 </div>
 
                 <div>
-                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: '#fff', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {t('created_products_history')}
                   </h4>
                   {userActivity.products_created.length === 0 ? (
@@ -521,7 +521,7 @@ export default function UserManagement() {
                           fontSize: '11px',
                         }}>
                           <div>
-                            <span style={{ fontWeight: '600', color: '#fff' }}>{prodItem.name}</span>
+                            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{prodItem.name}</span>
                             <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>
                               {prodItem.remaining_qty} / {prodItem.quantity || prodItem.weight} {prodItem.unit || 'kg'}
                             </span>

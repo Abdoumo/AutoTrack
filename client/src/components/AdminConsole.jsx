@@ -80,7 +80,7 @@ export default function AdminConsole({ products, onRefreshProducts }) {
           }}>
             {t('audit_oversight')}
           </span>
-          <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', letterSpacing: '-0.02em', marginTop: '2px' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.02em', marginTop: '2px' }}>
             {t('admin_title')}
           </h1>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
@@ -126,7 +126,7 @@ export default function AdminConsole({ products, onRefreshProducts }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="status-dot status-dot-danger" />
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
                 {t('day10_card_title')}
               </span>
             </div>
@@ -150,7 +150,7 @@ export default function AdminConsole({ products, onRefreshProducts }) {
                   borderRadius: 'var(--radius-xs)',
                   fontSize: '11px',
                 }}>
-                  <span style={{ color: '#fff', fontWeight: '500' }}>{p.name}</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{p.name}</span>
                   <span style={{ color: '#fca5a5' }}>
                     {p.remaining_qty} {p.unit || 'kg'} invendu
                   </span>
@@ -170,7 +170,7 @@ export default function AdminConsole({ products, onRefreshProducts }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="status-dot status-dot-warning" />
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
                 {t('day7_card_title')}
               </span>
             </div>
@@ -194,7 +194,7 @@ export default function AdminConsole({ products, onRefreshProducts }) {
                   borderRadius: 'var(--radius-xs)',
                   fontSize: '11px',
                 }}>
-                  <span style={{ color: '#fff', fontWeight: '500' }}>{p.name}</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{p.name}</span>
                   <span style={{ color: '#fde68a' }}>
                     {p.remaining_qty} {p.unit || 'kg'} ({p.days_remaining}j restants)
                   </span>
@@ -223,7 +223,7 @@ export default function AdminConsole({ products, onRefreshProducts }) {
           gap: '10px',
         }}>
           <div>
-            <h2 style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
               {t('user_claim_ledger')}
             </h2>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -269,12 +269,12 @@ export default function AdminConsole({ products, onRefreshProducts }) {
                     style={{ borderBottom: '1px solid var(--border-subtle)' }}
                   >
                     <td style={{ padding: '10px 12px' }}>
-                      <div style={{ fontWeight: '500', color: '#fff' }}>{tItem.user_name || 'Utilisateur'}</div>
+                      <div style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{tItem.user_name || 'Utilisateur'}</div>
                       <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{tItem.user_email || 'N/A'}</div>
                     </td>
 
                     <td style={{ padding: '10px 12px' }}>
-                      <div style={{ color: '#fff' }}>{tItem.product_name}</div>
+                      <div style={{ color: 'var(--text-primary)' }}>{tItem.product_name}</div>
                       <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
                         {tItem.product_id ? tItem.product_id.slice(0, 8) : ''}
                       </div>
@@ -283,8 +283,8 @@ export default function AdminConsole({ products, onRefreshProducts }) {
                     <td style={{ padding: '10px 12px' }}>
                       <span style={{
                         fontWeight: '600',
-                        color: '#fff',
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        color: 'var(--text-primary)',
+                        background: 'var(--accent-subtle)',
                         padding: '2px 6px',
                         borderRadius: 'var(--radius-xs)',
                       }}>

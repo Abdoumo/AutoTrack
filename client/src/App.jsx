@@ -161,7 +161,7 @@ function DashboardContent() {
               marginBottom: '20px',
             }}>
               <div>
-                <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', letterSpacing: '-0.02em' }}>
+                <h1 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                   {t('catalog_title')}
                 </h1>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
@@ -207,8 +207,9 @@ function DashboardContent() {
                         fontSize: '11px',
                         fontWeight: '600',
                         borderRadius: 'var(--radius-xs)',
-                        background: filterStatus === tab.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                        color: filterStatus === tab.id ? '#fff' : 'var(--text-muted)',
+                        background: filterStatus === tab.id ? 'var(--accent-subtle)' : 'transparent',
+                        color: filterStatus === tab.id ? 'var(--accent-primary)' : 'var(--text-muted)',
+                        border: filterStatus === tab.id ? '1px solid var(--accent-subtle)' : '1px solid transparent',
                         whiteSpace: 'nowrap',
                       }}
                     >
@@ -232,7 +233,7 @@ function DashboardContent() {
                 padding: '40px 16px',
                 textAlign: 'center',
               }}>
-                <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
                   {t('no_products_title')}
                 </h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
