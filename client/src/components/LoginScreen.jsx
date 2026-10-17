@@ -221,7 +221,7 @@ export default function LoginScreen() {
                 id="auth-gate-email"
                 type="email"
                 className="field-input"
-                placeholder="bedoushop@gmail.com"
+                placeholder="nom@exemple.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -256,51 +256,6 @@ export default function LoginScreen() {
                 ? (lang === 'fr' ? 'Connexion en cours...' : 'Logging in...') 
                 : mode === 'login' ? t('submit_login') : t('submit_register')}
             </button>
-
-            {/* Quick Demo Credentials Helper */}
-            {mode === 'login' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
-                <button
-                  type="button"
-                  id="fill-admin-creds-btn"
-                  onClick={handleQuickFillAdmin}
-                  style={{
-                    width: '100%',
-                    padding: '7px 10px',
-                    fontSize: '11px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'var(--accent-subtle)',
-                    color: 'var(--accent-primary)',
-                    border: '1px solid var(--border-medium)',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    fontWeight: '600',
-                  }}
-                >
-                  {lang === 'fr' ? 'Remplir compte admin (bedoushop@gmail.com)' : 'Fill admin account (bedoushop@gmail.com)'}
-                </button>
-
-                <button
-                  type="button"
-                  id="fill-user-creds-btn"
-                  onClick={handleQuickFillUser}
-                  style={{
-                    width: '100%',
-                    padding: '7px 10px',
-                    fontSize: '11px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'var(--bg-surface-elevated)',
-                    color: 'var(--text-secondary)',
-                    border: '1px solid var(--border-subtle)',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    fontWeight: '600',
-                  }}
-                >
-                  {lang === 'fr' ? 'Remplir compte utilisateur (nadia@store.com)' : 'Fill normal user (nadia@store.com)'}
-                </button>
-              </div>
-            )}
 
             {/* Mode Switcher */}
             <div style={{ textAlign: 'center', marginTop: '16px' }}>

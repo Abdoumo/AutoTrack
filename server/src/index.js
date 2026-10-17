@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const initDatabase = require('./initDb');
 
 dotenv.config();
 
@@ -18,11 +19,14 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/users', require('./routes/users'));
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  const { testConnection } = require('./db');
+  const dbStatus = await testConnection();
   res.json({
-    status: 'healthy',
+    status: dbStatus.connected ? 'healthy' : 'degraded',
+    database: dbStatus,
     timestamp: new Date().toISOString(),
-    service: 'Product Tracking & Risk Alert API',
+    service: 'AuraTrack PERN Inventory & Risk API',
   });
 });
 
@@ -31,7 +35,8 @@ require('./cron/riskDateChecker');
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 PERN Server running on http://localhost:${PORT}`);
   console.log(`📡 Health Check available at http://localhost:${PORT}/api/health`);
+  await initDatabase();
 });
