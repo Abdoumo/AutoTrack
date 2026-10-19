@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const pool = require('../db');
 const auth = require('../middleware/auth');
+const { isValidUUID, validatePositiveNumber } = require('../utils/validators');
 
 /**
  * POST /api/transactions/take
@@ -12,13 +13,15 @@ router.post('/take', auth, async (req, res) => {
   try {
     const { product_id, quantity } = req.body;
 
-    if (!product_id) {
-      return res.status(400).json({ error: 'Product ID is required.' });
+    if (!isValidUUID(product_id)) {
+      client.release();
+      return res.status(400).json({ error: 'Format d’identifiant produit (UUID) invalide.' });
     }
 
-    const qty = parseFloat(quantity);
-    if (isNaN(qty) || qty <= 0) {
-      return res.status(400).json({ error: 'Quantity must be a positive number.' });
+    const qty = validatePositiveNumber(quantity, 0.01);
+    if (qty === null) {
+      client.release();
+      return res.status(400).json({ error: 'La quantité prélevée doit être un nombre positif valide (> 0).' });
     }
 
     await client.query('BEGIN');

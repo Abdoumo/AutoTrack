@@ -45,9 +45,11 @@ async function initDatabase() {
         description TEXT,
         risk_date TIMESTAMP WITH TIME ZONE NOT NULL,
         status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'depleted', 'expired')),
+        image TEXT,
         created_by UUID REFERENCES users(id) ON DELETE SET NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS image TEXT;
     `);
 
     // 3. Transactions Table

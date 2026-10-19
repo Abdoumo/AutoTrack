@@ -29,6 +29,15 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user, token]);
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setToken(null);
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, []);
+
   const login = (userData, authToken = 'session-token') => {
     setUser(userData);
     setToken(authToken);

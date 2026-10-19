@@ -81,10 +81,65 @@ export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjus
           )}
         </div>
 
+        {/* Product Image Thumbnail */}
+        {product.image && (
+          <div style={{
+            width: '100%',
+            height: '135px',
+            borderRadius: 'var(--radius-sm)',
+            overflow: 'hidden',
+            marginBottom: '12px',
+            background: 'var(--bg-input)',
+            border: '1px solid var(--border-subtle)',
+            position: 'relative',
+          }}>
+            <img
+              src={product.image}
+              alt={product.name}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+              onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
+            />
+          </div>
+        )}
+
         {/* Product Title */}
         <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', lineHeight: 1.35, marginBottom: '6px' }}>
           {product.name}
         </h3>
+
+        {/* Creator / People Badge */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontSize: '10.5px',
+          color: 'var(--text-muted)',
+          marginBottom: '8px',
+        }}>
+          <div style={{
+            width: '18px',
+            height: '18px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #5d5fef 0%, #a855f7 100%)',
+            color: '#fff',
+            fontSize: '9px',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            {(product.creator_name || product.user_name || 'U').charAt(0).toUpperCase()}
+          </div>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {t('created_by')} <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>{product.creator_name || product.user_name || 'Utilisateur'}</span>
+          </span>
+        </div>
 
         {/* Description */}
         <p style={{

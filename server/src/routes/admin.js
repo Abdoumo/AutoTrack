@@ -9,26 +9,51 @@ const { transactionsToCSV } = require('../utils/csvExporter');
  */
 router.get('/transactions', auth, adminOnly, async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT 
-        t.id,
-        t.product_id,
-        t.user_id,
-        t.quantity_taken,
-        t.unit,
-        t.taken_at,
-        p.name AS product_name,
-        p.weight AS product_weight,
-        p.remaining_qty,
-        p.status AS product_status,
-        p.risk_date,
-        u.name AS user_name,
-        u.email AS user_email
-      FROM transactions t
-      JOIN products p ON t.product_id = p.id
-      LEFT JOIN users u ON t.user_id = u.id
-      ORDER BY t.taken_at DESC
-    `);
+    let result;
+    try {
+      result = await pool.query(`
+        SELECT 
+          t.id,
+          t.product_id,
+          t.user_id,
+          t.quantity_taken,
+          t.unit,
+          t.taken_at,
+          p.name AS product_name,
+          p.weight AS product_weight,
+          p.remaining_qty,
+          p.status AS product_status,
+          p.risk_date,
+          p.image AS product_image,
+          u.name AS user_name,
+          u.email AS user_email
+        FROM transactions t
+        JOIN products p ON t.product_id = p.id
+        LEFT JOIN users u ON t.user_id = u.id
+        ORDER BY t.taken_at DESC
+      `);
+    } catch (colErr) {
+      result = await pool.query(`
+        SELECT 
+          t.id,
+          t.product_id,
+          t.user_id,
+          t.quantity_taken,
+          t.unit,
+          t.taken_at,
+          p.name AS product_name,
+          p.weight AS product_weight,
+          p.remaining_qty,
+          p.status AS product_status,
+          p.risk_date,
+          u.name AS user_name,
+          u.email AS user_email
+        FROM transactions t
+        JOIN products p ON t.product_id = p.id
+        LEFT JOIN users u ON t.user_id = u.id
+        ORDER BY t.taken_at DESC
+      `);
+    }
 
     res.json(result.rows);
   } catch (err) {
@@ -122,9 +147,18 @@ router.get('/alerts', auth, adminOnly, async (req, res) => {
  */
 router.post('/send-test-email', auth, adminOnly, async (req, res) => {
   const { sendTestEmail } = require('../services/emailService');
+  const { validateEmail } = require('../utils/validators');
+
   try {
     const { targetEmail } = req.body || {};
-    const result = await sendTestEmail(targetEmail);
+    let recipient = null;
+    if (targetEmail) {
+      recipient = validateEmail(targetEmail);
+      if (!recipient) {
+        return res.status(400).json({ error: 'Adresse email destinataire invalide.' });
+      }
+    }
+    const result = await sendTestEmail(recipient);
     res.json({ success: true, message: 'Email de test envoyé avec succès.', result });
   } catch (err) {
     console.error('Send test email error:', err.message);

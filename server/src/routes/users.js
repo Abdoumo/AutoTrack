@@ -3,13 +3,17 @@ const bcrypt = require('bcryptjs');
 const pool = require('../db');
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
+const {
+  validateEmail,
+  validatePassword,
+  validateName,
+  validateRole,
+  isValidUUID,
+} = require('../utils/validators');
 
 /**
  * GET /api/users
- * Retrieve all users with aggregated activity metrics:
- * - products_created_count
- * - transactions_count
- * - total_quantity_claimed
+ * Retrieve all users with aggregated activity metrics
  */
 router.get('/', auth, adminOnly, async (req, res) => {
   try {
@@ -39,13 +43,15 @@ router.get('/', auth, adminOnly, async (req, res) => {
 
 /**
  * GET /api/users/:id/activity
- * Deep analytics on a specific user's actions:
- * - Products captured
- * - Transactions made (who took what, quantity, weight, date)
+ * Deep analytics on a specific user's actions
  */
 router.get('/:id/activity', auth, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Format d’identifiant utilisateur (UUID) invalide.' });
+    }
 
     // User details
     const userResult = await pool.query(
@@ -54,7 +60,7 @@ router.get('/:id/activity', auth, adminOnly, async (req, res) => {
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found.' });
+      return res.status(404).json({ error: 'Utilisateur non trouvé.' });
     }
 
     // Products captured by this user
@@ -66,7 +72,7 @@ router.get('/:id/activity', auth, adminOnly, async (req, res) => {
       [id]
     );
 
-    // Transactions made by this user (items claimed)
+    // Transactions made by this user
     const transactionsResult = await pool.query(
       `SELECT 
         t.id,
@@ -111,20 +117,25 @@ router.post('/', auth, adminOnly, async (req, res) => {
   try {
     const { name, email, password, role = 'user' } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Name, email, and password are required.' });
+    const cleanName = validateName(name);
+    if (!cleanName) {
+      return res.status(400).json({ error: 'Nom complet requis (1 à 100 caractères).' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    const cleanEmail = validateEmail(email);
+    if (!cleanEmail) {
+      return res.status(400).json({ error: 'Format d’adresse email invalide.' });
     }
 
-    const validRoles = ['admin', 'user'];
-    const chosenRole = validRoles.includes(role) ? role : 'user';
+    if (!validatePassword(password)) {
+      return res.status(400).json({ error: 'Le mot de passe doit comporter entre 6 et 128 caractères.' });
+    }
 
-    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    const cleanRole = validateRole(role);
+
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
     if (existing.rows.length > 0) {
-      return res.status(409).json({ error: 'A user with this email already exists.' });
+      return res.status(409).json({ error: 'Un utilisateur avec cette adresse email existe déjà.' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -134,7 +145,7 @@ router.post('/', auth, adminOnly, async (req, res) => {
       `INSERT INTO users (name, email, password_hash, role)
        VALUES ($1, $2, $3, $4)
        RETURNING id, name, email, role, created_at`,
-      [name.trim(), email.toLowerCase().trim(), passwordHash, chosenRole]
+      [cleanName, cleanEmail, passwordHash, cleanRole]
     );
 
     res.status(201).json(result.rows[0]);
@@ -153,18 +164,42 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
     const { id } = req.params;
     const { name, email, role, password } = req.body;
 
-    const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found.' });
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Format d’identifiant utilisateur (UUID) invalide.' });
     }
 
-    const validRoles = ['admin', 'user'];
-    const chosenRole = role && validRoles.includes(role) ? role : userResult.rows[0].role;
-    const chosenName = name ? name.trim() : userResult.rows[0].name;
-    const chosenEmail = email ? email.toLowerCase().trim() : userResult.rows[0].email;
+    const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé.' });
+    }
 
-    let passwordHash = userResult.rows[0].password_hash;
-    if (password && password.trim().length >= 6) {
+    const currentUser = userResult.rows[0];
+
+    const chosenName = name ? (validateName(name) || currentUser.name) : currentUser.name;
+    
+    let chosenEmail = currentUser.email;
+    if (email) {
+      const validEmail = validateEmail(email);
+      if (!validEmail) {
+        return res.status(400).json({ error: 'Format d’adresse email invalide.' });
+      }
+      // Check collision
+      if (validEmail !== currentUser.email) {
+        const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [validEmail, id]);
+        if (emailCheck.rows.length > 0) {
+          return res.status(409).json({ error: 'Cette adresse email est déjà utilisée.' });
+        }
+      }
+      chosenEmail = validEmail;
+    }
+
+    const chosenRole = role ? validateRole(role) : currentUser.role;
+
+    let passwordHash = currentUser.password_hash;
+    if (password && typeof password === 'string' && password.trim().length > 0) {
+      if (!validatePassword(password)) {
+        return res.status(400).json({ error: 'Le nouveau mot de passe doit comporter entre 6 et 128 caractères.' });
+      }
       const salt = await bcrypt.genSalt(10);
       passwordHash = await bcrypt.hash(password.trim(), salt);
     }
@@ -192,19 +227,28 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Prevent deleting the primary admin account
-    const userResult = await pool.query('SELECT email FROM users WHERE id = $1', [id]);
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found.' });
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Format d’identifiant utilisateur (UUID) invalide.' });
     }
 
-    if (userResult.rows[0].email === 'bedoushop@gmail.com') {
-      return res.status(403).json({ error: 'Cannot delete the primary root admin account.' });
+    // Prevent self-deletion
+    if (req.user.id === id) {
+      return res.status(400).json({ error: 'Action interdite : vous ne pouvez pas supprimer votre propre compte actif.' });
+    }
+
+    const userResult = await pool.query('SELECT email FROM users WHERE id = $1', [id]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé.' });
+    }
+
+    const rootAdminEmail = (process.env.ADMIN_EMAIL || 'bedoushop@gmail.com').toLowerCase();
+    if (userResult.rows[0].email.toLowerCase() === rootAdminEmail) {
+      return res.status(403).json({ error: 'Interdit : le compte administrateur racine ne peut pas être supprimé.' });
     }
 
     await pool.query('DELETE FROM users WHERE id = $1', [id]);
 
-    res.json({ message: 'User account removed successfully.' });
+    res.json({ message: 'Compte utilisateur supprimé avec succès.' });
   } catch (err) {
     console.error('Delete user error:', err.message);
     res.status(500).json({ error: 'Server error removing user.' });

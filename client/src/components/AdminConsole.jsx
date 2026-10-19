@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { exportTransactionsToExcel } from '../services/excelExporter';
+import { FileSpreadsheet } from 'lucide-react';
 
 export default function AdminConsole({ products, onRefreshProducts }) {
   const { isAdmin } = useAuth();
@@ -27,19 +29,20 @@ export default function AdminConsole({ products, onRefreshProducts }) {
     loadTransactions();
   }, []);
 
-  const handleExportCSV = async () => {
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+  const safeProducts = Array.isArray(products) ? products : [];
+
+  const handleExportExcel = () => {
     try {
       setExporting(true);
-      await api.downloadTransactionsCSV();
+      const listToExport = filteredTransactions.length > 0 ? filteredTransactions : safeTransactions;
+      exportTransactionsToExcel(listToExport, safeProducts, t);
     } catch (err) {
-      console.error('Export failed', err);
+      console.error('Excel Export failed', err);
     } finally {
       setExporting(false);
     }
   };
-
-  const safeTransactions = Array.isArray(transactions) ? transactions : [];
-  const safeProducts = Array.isArray(products) ? products : [];
 
   const filteredTransactions = safeTransactions.filter((t) => {
     const q = searchQuery.toLowerCase();
@@ -122,13 +125,14 @@ export default function AdminConsole({ products, onRefreshProducts }) {
           </button>
 
           <button
-            id="export-csv-btn"
-            onClick={handleExportCSV}
+            id="export-excel-btn"
+            onClick={handleExportExcel}
             className="btn btn-primary"
-            style={{ fontSize: '12px', padding: '6px 14px' }}
+            style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
             disabled={exporting}
           >
-            {exporting ? 'Génération...' : t('export_csv')}
+            <FileSpreadsheet size={15} />
+            <span>{exporting ? 'Génération...' : t('export_csv')}</span>
           </button>
         </div>
       </div>
@@ -298,10 +302,52 @@ export default function AdminConsole({ products, onRefreshProducts }) {
                     </td>
 
                     <td style={{ padding: '10px 12px' }}>
-                      <div style={{ color: 'var(--text-primary)' }}>{tItem.product_name}</div>
-                      <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-                        {tItem.product_id ? tItem.product_id.slice(0, 8) : ''}
-                      </div>
+                      {(() => {
+                        const matchingProd = safeProducts.find((p) => p.id === tItem.product_id);
+                        const prodImg = tItem.product_image || matchingProd?.image;
+                        return (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {prodImg ? (
+                              <img
+                                src={prodImg}
+                                alt={tItem.product_name}
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: 'var(--radius-xs)',
+                                  objectFit: 'cover',
+                                  flexShrink: 0,
+                                  border: '1px solid var(--border-subtle)',
+                                }}
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              />
+                            ) : (
+                              <div style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: 'var(--radius-xs)',
+                                background: 'var(--bg-surface-elevated)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                color: 'var(--text-muted)',
+                                flexShrink: 0,
+                                border: '1px solid var(--border-subtle)',
+                              }}>
+                                {(tItem.product_name || 'P').charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <div style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{tItem.product_name}</div>
+                              <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                                {tItem.product_id ? tItem.product_id.slice(0, 8) : ''}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     <td style={{ padding: '10px 12px' }}>

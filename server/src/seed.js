@@ -2,8 +2,8 @@ const bcrypt = require('bcryptjs');
 const pool = require('./db');
 require('dotenv').config();
 
-const ADMIN_EMAIL = 'bedoushop@gmail.com';
-const ADMIN_PASSWORD = 'Bx9#kLm2vQ7pWsR'; // Exactly 15 chars
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'bedoushop@gmail.com').toLowerCase().trim();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Bx9#kLm2vQ7pWsR';
 
 async function seedAdmin() {
   console.log('--- Initializing Admin User Seed ---');
@@ -28,8 +28,7 @@ async function seedAdmin() {
     console.log('✅ Admin user created successfully!');
     console.log('----------------------------------------------------');
     console.log(`Admin Email   : ${ADMIN_EMAIL}`);
-    console.log(`Admin Password: ${ADMIN_PASSWORD}`);
-    console.log('Role          : admin');
+    console.log(`Role          : admin`);
     console.log('ID            : ' + result.rows[0].id);
     console.log('----------------------------------------------------');
   } catch (error) {

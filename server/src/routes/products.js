@@ -2,6 +2,7 @@ const router = require('express').Router();
 const pool = require('../db');
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
+const { validateName, validateUnit, validatePositiveNumber, isValidUUID, validateDate } = require('../utils/validators');
 
 /**
  * GET /api/products
@@ -32,7 +33,11 @@ router.get('/', auth, async (req, res) => {
     res.json(products);
   } catch (err) {
     console.error('Get products error:', err.message);
-    res.status(500).json({ error: 'Server error fetching products.' });
+    const isConnErr = err.code === 'ECONNREFUSED' || err.code === '28P01' || err.message.includes('authentication failed') || err.message.includes('connect');
+    const msg = isConnErr 
+      ? 'Database not connected: Please configure a valid DATABASE_URL in server/.env'
+      : 'Server error fetching products.';
+    res.status(500).json({ error: msg });
   }
 });
 
@@ -42,6 +47,10 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Format d’identifiant produit (UUID) invalide.' });
+    }
 
     const productResult = await pool.query(
       `SELECT 
@@ -56,7 +65,7 @@ router.get('/:id', auth, async (req, res) => {
     );
 
     if (productResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Product not found.' });
+      return res.status(404).json({ error: 'Produit non trouvé.' });
     }
 
     const product = productResult.rows[0];
@@ -87,36 +96,57 @@ router.get('/:id', auth, async (req, res) => {
  */
 router.post('/', auth, async (req, res) => {
   try {
-    const { name, unit = 'kg', quantity, weight = 0, description = '', risk_days } = req.body;
+    const { name, unit = 'kg', quantity, weight = 0, description = '', risk_days, image = '' } = req.body;
 
-    // Strict input validation
-    if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      return res.status(400).json({ error: 'Valid product name is required.' });
+    const cleanName = validateName(name);
+    if (!cleanName) {
+      return res.status(400).json({ error: 'Nom du produit invalide (1 à 100 caractères requis).' });
     }
 
-    const validUnits = ['kg', 'piece'];
-    const chosenUnit = validUnits.includes(unit) ? unit : 'kg';
+    const chosenUnit = validateUnit(unit);
 
-    const parsedQty = parseFloat(quantity);
-    if (isNaN(parsedQty) || parsedQty <= 0) {
-      return res.status(400).json({ error: 'Quantity must be a positive number.' });
+    const parsedQty = validatePositiveNumber(quantity, 0.01);
+    if (parsedQty === null) {
+      return res.status(400).json({ error: 'La quantité doit être un nombre positif valide (> 0).' });
     }
 
-    const parsedWeight = parseFloat(weight);
-    if (isNaN(parsedWeight) || parsedWeight < 0) {
-      return res.status(400).json({ error: 'Weight must be 0 or greater.' });
+    const parsedWeight = validatePositiveNumber(weight, 0);
+    if (parsedWeight === null) {
+      return res.status(400).json({ error: 'Le poids doit être un nombre positif ou nul (>= 0).' });
     }
 
-    const days = parseInt(risk_days, 10) || 10;
+    const cleanDesc = typeof description === 'string' ? description.trim().slice(0, 2000) : '';
+
+    const days = parseInt(risk_days, 10);
+    const validDays = !isNaN(days) && days >= 1 && days <= 3650 ? days : 10;
     const riskDate = new Date();
-    riskDate.setDate(riskDate.getDate() + Math.max(1, days));
+    riskDate.setDate(riskDate.getDate() + validDays);
 
-    const result = await pool.query(
-      `INSERT INTO products (name, unit, quantity, remaining_qty, weight, description, risk_date, created_by)
-       VALUES ($1, $2, $3, $3, $4, $5, $6, $7)
-       RETURNING *`,
-      [name.trim(), chosenUnit, parsedQty, parsedWeight, description.trim(), riskDate.toISOString(), req.user.id]
-    );
+    const imgVal = typeof image === 'string' ? image : '';
+
+    let result;
+    try {
+      result = await pool.query(
+        `INSERT INTO products (name, unit, quantity, remaining_qty, weight, description, risk_date, created_by, image)
+         VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8)
+         RETURNING *`,
+        [cleanName, chosenUnit, parsedQty, parsedWeight, cleanDesc, riskDate.toISOString(), req.user.id, imgVal]
+      );
+    } catch (colErr) {
+      if (colErr.message && colErr.message.includes('image')) {
+        result = await pool.query(
+          `INSERT INTO products (name, unit, quantity, remaining_qty, weight, description, risk_date, created_by)
+           VALUES ($1, $2, $3, $3, $4, $5, $6, $7)
+           RETURNING *`,
+          [cleanName, chosenUnit, parsedQty, parsedWeight, cleanDesc, riskDate.toISOString(), req.user.id]
+        );
+        if (result.rows[0]) {
+          result.rows[0].image = imgVal;
+        }
+      } else {
+        throw colErr;
+      }
+    }
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -132,38 +162,89 @@ router.post('/', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, unit = 'kg', quantity, weight, description, risk_date } = req.body;
+    const { name, unit = 'kg', quantity, weight, description, risk_date, image } = req.body;
+
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Format d’identifiant produit (UUID) invalide.' });
+    }
 
     const existing = await pool.query('SELECT * FROM products WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
-      return res.status(404).json({ error: 'Product not found.' });
+      return res.status(404).json({ error: 'Produit non trouvé.' });
     }
 
-    // Only admin or the creator can edit
+    // Only admin or the creator can edit (IDOR protection)
     if (req.user.role !== 'admin' && existing.rows[0].created_by !== req.user.id) {
-      return res.status(403).json({ error: 'Permission denied. You can only edit your own products.' });
+      return res.status(403).json({ error: 'Accès refusé. Vous ne pouvez modifier que vos propres produits.' });
     }
 
     const current = existing.rows[0];
-    const newName = name ? name.trim() : current.name;
-    const newUnit = ['kg', 'piece'].includes(unit) ? unit : current.unit;
-    const newQty = quantity !== undefined ? parseFloat(quantity) : parseFloat(current.quantity);
-    const newWeight = weight !== undefined ? parseFloat(weight) : parseFloat(current.weight);
-    const newDesc = description !== undefined ? description.trim() : current.description;
-    const newRiskDate = risk_date ? new Date(risk_date).toISOString() : current.risk_date;
+    const newName = name ? (validateName(name) || current.name) : current.name;
+    const newUnit = validateUnit(unit);
+    
+    let newQty = parseFloat(current.quantity);
+    if (quantity !== undefined) {
+      const validQty = validatePositiveNumber(quantity, 0.01);
+      if (validQty === null) {
+        return res.status(400).json({ error: 'La quantité doit être un nombre positif valide (> 0).' });
+      }
+      newQty = validQty;
+    }
+
+    let newWeight = parseFloat(current.weight);
+    if (weight !== undefined) {
+      const validWeight = validatePositiveNumber(weight, 0);
+      if (validWeight === null) {
+        return res.status(400).json({ error: 'Le poids doit être un nombre positif ou nul (>= 0).' });
+      }
+      newWeight = validWeight;
+    }
+
+    const newDesc = description !== undefined && typeof description === 'string'
+      ? description.trim().slice(0, 2000)
+      : current.description;
+
+    let newRiskDate = current.risk_date;
+    if (risk_date) {
+      const validDate = validateDate(risk_date);
+      if (!validDate) {
+        return res.status(400).json({ error: 'Format de date de risque invalide.' });
+      }
+      newRiskDate = validDate;
+    }
+
+    const newImage = image !== undefined ? (typeof image === 'string' ? image : '') : (current.image || '');
 
     // Adjust remaining_qty proportionally or preserve it
     const deducted = parseFloat(current.quantity) - parseFloat(current.remaining_qty);
     const newRemaining = Math.max(0, newQty - deducted);
     const newStatus = newRemaining <= 0 ? 'depleted' : current.status;
 
-    const result = await pool.query(
-      `UPDATE products 
-       SET name = $1, unit = $2, quantity = $3, remaining_qty = $4, weight = $5, description = $6, risk_date = $7, status = $8
-       WHERE id = $9
-       RETURNING *`,
-      [newName, newUnit, newQty, newRemaining, newWeight, newDesc, newRiskDate, newStatus, id]
-    );
+    let result;
+    try {
+      result = await pool.query(
+        `UPDATE products 
+         SET name = $1, unit = $2, quantity = $3, remaining_qty = $4, weight = $5, description = $6, risk_date = $7, status = $8, image = $9
+         WHERE id = $10
+         RETURNING *`,
+        [newName, newUnit, newQty, newRemaining, newWeight, newDesc, newRiskDate, newStatus, newImage, id]
+      );
+    } catch (colErr) {
+      if (colErr.message && colErr.message.includes('image')) {
+        result = await pool.query(
+          `UPDATE products 
+           SET name = $1, unit = $2, quantity = $3, remaining_qty = $4, weight = $5, description = $6, risk_date = $7, status = $8
+           WHERE id = $9
+           RETURNING *`,
+          [newName, newUnit, newQty, newRemaining, newWeight, newDesc, newRiskDate, newStatus, id]
+        );
+        if (result.rows[0]) {
+          result.rows[0].image = newImage;
+        }
+      } else {
+        throw colErr;
+      }
+    }
 
     res.json(result.rows[0]);
   } catch (err) {
@@ -180,17 +261,22 @@ router.put('/:id/risk-date', auth, adminOnly, async (req, res) => {
     const { id } = req.params;
     const { risk_date } = req.body;
 
-    if (!risk_date || isNaN(new Date(risk_date).getTime())) {
-      return res.status(400).json({ error: 'Valid risk date is required.' });
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Format d’identifiant produit (UUID) invalide.' });
+    }
+
+    const validDate = validateDate(risk_date);
+    if (!validDate) {
+      return res.status(400).json({ error: 'Date de risque invalide.' });
     }
 
     const result = await pool.query(
       `UPDATE products SET risk_date = $1 WHERE id = $2 RETURNING *`,
-      [new Date(risk_date).toISOString(), id]
+      [validDate, id]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Product not found.' });
+      return res.status(404).json({ error: 'Produit non trouvé.' });
     }
 
     res.json(result.rows[0]);
@@ -206,13 +292,18 @@ router.put('/:id/risk-date', auth, adminOnly, async (req, res) => {
 router.delete('/:id', auth, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Format d’identifiant produit (UUID) invalide.' });
+    }
+
     const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Product not found.' });
+      return res.status(404).json({ error: 'Produit non trouvé.' });
     }
 
-    res.json({ message: 'Product deleted successfully.' });
+    res.json({ message: 'Produit supprimé avec succès.' });
   } catch (err) {
     console.error('Delete product error:', err.message);
     res.status(500).json({ error: 'Server error deleting product.' });
@@ -220,3 +311,4 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
 });
 
 module.exports = router;
+

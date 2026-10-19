@@ -9,7 +9,7 @@ export const translations = {
     feed: 'Inventaire',
     users: 'Utilisateurs & Statistiques',
     admin: 'Journal Admin & CSV',
-    capture: '+ Enregistrer',
+    capture: '+ Créer',
     login: 'Connexion',
     logout: 'Déconnexion',
     register: 'Inscription',
@@ -35,7 +35,17 @@ export const translations = {
     filter_depleted: 'Épuisé',
     no_products_title: 'Aucun produit trouvé',
     no_products_desc: 'Aucun article ne correspond à votre recherche. Enregistrez un nouveau produit.',
-    capture_new_btn: 'Enregistrer un Nouveau Produit',
+    capture_new_btn: 'Créer un Nouveau Produit',
+
+    // Sorting
+    sort_label: 'Trier :',
+    sort_risk: 'Risque (Urgent d’abord)',
+    sort_name: 'Nom (A-Z)',
+    sort_date: 'Date d’enregistrement',
+    sort_qty: 'Stock disponible',
+    sort_asc: 'Croissant',
+    sort_desc: 'Décroissant',
+    at_risk_badge: '⚠️ Produits à risque en premier',
 
     // Product Card
     ref: 'RÉF',
@@ -51,11 +61,17 @@ export const translations = {
     confirm_delete_product: 'Voulez-vous vraiment supprimer ce produit ?',
 
     // Product Capture & Edit Modal
-    modal_capture_title: 'Enregistrer un Produit',
+    modal_capture_title: 'Créer un Produit',
     modal_edit_title: 'Modifier le Produit',
-    modal_desc: 'Définissez la quantité, le poids et le calendrier de risque.',
+    modal_desc: 'Définissez la quantité, le poids, l’image et le calendrier de risque.',
     ref_uuid: 'Référence Système (UUID)',
     product_name_label: 'Nom du Produit *',
+    product_image_label: 'Image du Produit',
+    upload_image_hint: 'Glissez une photo ou cliquez pour parcourir (PNG, JPG, WEBP)',
+    or_image_url: 'Ou collez une URL d’image web :',
+    remove_image_btn: 'Supprimer l’image',
+    change_image_btn: 'Changer l’image',
+    creator_label: 'Opérateur / Créateur',
     measurement_unit_label: 'Unité de Mesure *',
     unit_piece: 'Pièce (pcs)',
     unit_kg: 'Kilogramme (kg)',
@@ -66,7 +82,10 @@ export const translations = {
     risk_rule_notice: 'Avis email administrateur au Jour 7. Alerte rouge critique au Jour 10.',
     target_deadline: 'Échéance cible :',
     cancel: 'Annuler',
-    save_product: 'Enregistrer le Produit',
+    save_product: 'Créer le Produit',
+    create_btn: 'Créer',
+    edit_product_btn: 'Modifier le Produit',
+    creating: 'Création...',
     saving: 'Enregistrement...',
 
     // Take / Claim Modal
@@ -81,10 +100,13 @@ export const translations = {
 
     // Admin & Ledger
     audit_oversight: 'Audit & Gestion des Risques',
-    admin_title: 'Journal des Transactions & Export CSV',
-    admin_subtitle: 'Historique complet des réclamations de stock et téléchargement CSV.',
+    admin_title: 'Journal des Transactions & Export Excel',
+    admin_subtitle: 'Historique complet des réclamations de stock et téléchargement Excel avec images.',
     refresh: 'Actualiser',
-    export_csv: 'Exporter CSV',
+    export_csv: 'Exporter Excel (avec Images)',
+    export_excel: 'Exporter Excel (avec Images)',
+    sidebar_nav: 'Navigation',
+    sidebar_preferences: 'Préférences',
     preview_day7: 'Aperçu Email Jour 7',
     preview_day10: 'Aperçu Email Jour 10',
     day10_card_title: 'Jour 10 Dépassé (Critique)',
@@ -93,7 +115,7 @@ export const translations = {
     day7_card_desc: 'Articles ayant 3 jours ou moins avant l’échéance du Jour 10.',
     user_claim_ledger: 'Journal des Réclamations',
     search_records: 'Filtrer les enregistrements...',
-    col_claimant: 'Bénéficiaire',
+    col_claimant: 'Expéditeur',
     col_product: 'Produit',
     col_qty: 'Quantité',
     col_weight: 'Poids',
@@ -138,6 +160,7 @@ export const translations = {
     auth_have_account: 'Vous avez déjà un compte ? Se connecter',
     submit_login: 'Se Connecter',
     submit_register: 'Créer un Compte',
+    created_by: 'Créé par',
   },
   en: {
     // Navigation
@@ -145,7 +168,7 @@ export const translations = {
     feed: 'Inventory Feed',
     users: 'User Analytics & CRUD',
     admin: 'Admin Ledger & CSV',
-    capture: '+ Capture',
+    capture: '+ Create',
     login: 'Login',
     logout: 'Logout',
     register: 'Register',
@@ -171,7 +194,17 @@ export const translations = {
     filter_depleted: 'Depleted',
     no_products_title: 'No Products Match Filter',
     no_products_desc: 'Try adjusting your search criteria or register a new product.',
-    capture_new_btn: 'Capture New Product',
+    capture_new_btn: 'Create New Product',
+
+    // Sorting
+    sort_label: 'Sort:',
+    sort_risk: 'Risk (Urgent first)',
+    sort_name: 'Name (A-Z)',
+    sort_date: 'Date Added',
+    sort_qty: 'Stock Available',
+    sort_asc: 'Ascending',
+    sort_desc: 'Descending',
+    at_risk_badge: '⚠️ At-risk products first',
 
     // Product Card
     ref: 'REF',
@@ -187,11 +220,17 @@ export const translations = {
     confirm_delete_product: 'Are you sure you want to delete this product?',
 
     // Product Capture & Edit Modal
-    modal_capture_title: 'Capture Product',
+    modal_capture_title: 'Create Product',
     modal_edit_title: 'Edit Product',
-    modal_desc: 'Configure inventory quantity, weight, and risk timeline.',
+    modal_desc: 'Configure inventory quantity, weight, image, and risk timeline.',
     ref_uuid: 'System Reference (UUID)',
     product_name_label: 'Product Name *',
+    product_image_label: 'Product Image',
+    upload_image_hint: 'Drag & drop an image or click to browse (PNG, JPG, WEBP)',
+    or_image_url: 'Or paste a web image URL:',
+    remove_image_btn: 'Remove image',
+    change_image_btn: 'Change image',
+    creator_label: 'Operator / Creator',
     measurement_unit_label: 'Measurement Unit *',
     unit_piece: 'Piece (pcs)',
     unit_kg: 'Kilogram (kg)',
@@ -202,7 +241,10 @@ export const translations = {
     risk_rule_notice: 'Day 7 admin notice. Day 10 critical red status.',
     target_deadline: 'Target deadline:',
     cancel: 'Cancel',
-    save_product: 'Save Product',
+    save_product: 'Create Product',
+    create_btn: 'Create',
+    edit_product_btn: 'Update Product',
+    creating: 'Creating...',
     saving: 'Saving...',
 
     // Take / Claim Modal
@@ -217,10 +259,13 @@ export const translations = {
 
     // Admin & Ledger
     audit_oversight: 'Audit & Risk Oversight',
-    admin_title: 'Transaction Ledger & Export',
-    admin_subtitle: 'Full audit log of inventory claims, quantity deductions, and CSV generation.',
+    admin_title: 'Transaction Ledger & Excel Export',
+    admin_subtitle: 'Full audit log of inventory claims with embedded product images and Excel export.',
     refresh: 'Refresh',
-    export_csv: 'Export CSV',
+    export_csv: 'Export Excel (with Images)',
+    export_excel: 'Export Excel (with Images)',
+    sidebar_nav: 'Navigation',
+    sidebar_preferences: 'Preferences',
     preview_day7: 'Day 7 Email Preview',
     preview_day10: 'Day 10 Email Preview',
     day10_card_title: 'Day 10 Overdue (Critical)',
@@ -229,7 +274,7 @@ export const translations = {
     day7_card_desc: 'Items with 3 or fewer days remaining before the Day 10 cutoff.',
     user_claim_ledger: 'User Claim Ledger',
     search_records: 'Filter records...',
-    col_claimant: 'Claimant',
+    col_claimant: 'Expediteur',
     col_product: 'Product',
     col_qty: 'Quantity',
     col_weight: 'Weight',
@@ -274,6 +319,7 @@ export const translations = {
     auth_have_account: 'Already have an account? Login',
     submit_login: 'Login',
     submit_register: 'Create Account',
+    created_by: 'Created by',
   },
 };
 

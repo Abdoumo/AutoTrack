@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import Footer from './Footer';
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -276,6 +277,9 @@ export default function LoginScreen() {
           </form>
         </div>
       </div>
+
+      {/* Brand Footer */}
+      <Footer style={{ marginTop: 'auto', borderTop: 'none', padding: '16px 8px' }} />
     </div>
   );
 }

@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const auth = require('../middleware/auth');
+const { validateEmail, validatePassword, validateName } = require('../utils/validators');
 
 /**
  * POST /api/auth/register
@@ -13,19 +14,24 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validate input
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Name, email, and password are required.' });
+    const cleanName = validateName(name);
+    if (!cleanName) {
+      return res.status(400).json({ error: 'Nom complet invalide (1 à 100 caractères requis).' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    const cleanEmail = validateEmail(email);
+    if (!cleanEmail) {
+      return res.status(400).json({ error: 'Format d’adresse email invalide.' });
+    }
+
+    if (!validatePassword(password)) {
+      return res.status(400).json({ error: 'Le mot de passe doit comporter entre 6 et 128 caractères.' });
     }
 
     // Check if user already exists
-    const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
     if (existingUser.rows.length > 0) {
-      return res.status(409).json({ error: 'An account with this email already exists.' });
+      return res.status(409).json({ error: 'Un compte avec cette adresse email existe déjà.' });
     }
 
     // Hash password
@@ -52,7 +58,11 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ token, user });
   } catch (err) {
     console.error('Register error:', err.message);
-    res.status(500).json({ error: 'Server error during registration.' });
+    const isConnErr = err.code === 'ECONNREFUSED' || err.code === '28P01' || err.message.includes('authentication failed') || err.message.includes('connect');
+    const msg = isConnErr 
+      ? 'Database not connected: Please configure a valid DATABASE_URL in server/.env (e.g. Neon, Supabase, Render)'
+      : (err.message || 'Server error during registration.');
+    res.status(500).json({ error: msg });
   }
 });
 
@@ -65,14 +75,15 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required.' });
+    const cleanEmail = validateEmail(email);
+    if (!cleanEmail || !password || typeof password !== 'string' || password.length > 128) {
+      return res.status(400).json({ error: 'Identifiants ou format invalide.' });
     }
 
     // Find user
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [cleanEmail]);
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect.' });
     }
 
     const user = result.rows[0];
@@ -80,7 +91,7 @@ router.post('/login', async (req, res) => {
     // Verify password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect.' });
     }
 
     // Generate JWT
@@ -102,7 +113,11 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err.message);
-    res.status(500).json({ error: 'Server error during login.' });
+    const isConnErr = err.code === 'ECONNREFUSED' || err.code === '28P01' || err.message.includes('authentication failed') || err.message.includes('connect');
+    const msg = isConnErr 
+      ? 'Database not connected: Please configure a valid DATABASE_URL in server/.env (e.g. Neon, Supabase, Render)'
+      : (err.message || 'Server error during login.');
+    res.status(500).json({ error: msg });
   }
 });
 
