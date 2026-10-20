@@ -570,7 +570,7 @@ export const api = {
     }
 
     const transactions = getStorage(STORAGE_KEYS.TRANSACTIONS, INITIAL_DEMO_TRANSACTIONS);
-    const headers = ['Transaction ID,Product Name,Product ID,User Name,User Email,Quantity Taken,Unit,Weight (kg),Date Taken,Status'];
+    const headers = ['Transaction ID,Product Name,Product Image Link,Product ID,User Name,User Email,Quantity Taken,Unit,Weight (kg),Date Taken,Status'];
 
     const sanitize = (val) => {
       let str = String(val || '').trim();
@@ -584,6 +584,7 @@ export const api = {
     const rows = transactions.map((t) => [
       sanitize(t.id),
       sanitize(t.product_name),
+      sanitize(t.product_id ? `http://localhost:5000/api/products/${t.product_id}/image` : 'N/A'),
       sanitize(t.product_id),
       sanitize(t.user_name),
       sanitize(t.user_email),

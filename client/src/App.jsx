@@ -430,7 +430,7 @@ function DashboardContent() {
                       fontWeight: '600',
                       cursor: 'pointer',
                     }}
-                    title="Télécharger les données au format texte brut CSV (sans photos)"
+                    title="Télécharger l'inventaire au format CSV avec liens directs vers les photos"
                   >
                     <Download size={13} />
                     <span>{t('export_csv')}</span>

@@ -26,6 +26,7 @@ function transactionsToCSV(transactions) {
   const headers = [
     'Transaction ID',
     'Product Name',
+    'Product Image Link',
     'Product ID',
     'User Name',
     'User Email',
@@ -39,6 +40,7 @@ function transactionsToCSV(transactions) {
   const rows = transactions.map((t) => [
     sanitizeForCsv(t.id),
     sanitizeForCsv(t.product_name || 'N/A'),
+    sanitizeForCsv(t.product_id ? `http://localhost:5000/api/products/${t.product_id}/image` : 'N/A'),
     sanitizeForCsv(t.product_id),
     sanitizeForCsv(t.user_name || 'N/A'),
     sanitizeForCsv(t.user_email || 'N/A'),

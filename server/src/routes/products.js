@@ -3,6 +3,7 @@ const pool = require('../db');
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const { validateName, validateUnit, validatePositiveNumber, isValidUUID, validateDate } = require('../utils/validators');
+const { DEMO_IMAGE_MAP } = require('../utils/demoPhotos');
 
 /**
  * GET /api/products
@@ -38,6 +39,123 @@ router.get('/', auth, async (req, res) => {
       ? 'Database not connected: Please configure a valid DATABASE_URL in server/.env'
       : 'Server error fetching products.';
     res.status(500).json({ error: msg });
+  }
+});
+
+/**
+ * GET /api/products/:id/image
+ * Public endpoint to stream/view product photo directly via link (used in CSV exports & external previews)
+ * - Returns the actual decoded binary image (jpeg/png/webp) if stored as base64
+ * - Redirects if stored as an external URL
+ * - Returns seed photo for demo items
+ * - Returns a stylized vector SVG placeholder if no image exists
+ */
+router.get('/:id/image', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let image = null;
+    let productName = 'Produit AuraTrack';
+
+    // 1. Try querying PostgreSQL database
+    if (isValidUUID(id)) {
+      try {
+        const result = await pool.query('SELECT name, image FROM products WHERE id = $1', [id]);
+        if (result.rows.length > 0) {
+          image = result.rows[0].image;
+          productName = result.rows[0].name || productName;
+        }
+      } catch (dbErr) {
+        console.warn('DB query error for product image:', dbErr.message);
+      }
+    }
+
+    // 2. Fallback to demo items if not found or DB offline
+    if (!image && DEMO_IMAGE_MAP && DEMO_IMAGE_MAP[id]) {
+      image = DEMO_IMAGE_MAP[id].image;
+      productName = DEMO_IMAGE_MAP[id].name || productName;
+    }
+
+    // 3. If image is an external URL, redirect directly
+    if (typeof image === 'string' && (image.startsWith('http://') || image.startsWith('https://'))) {
+      return res.redirect(image);
+    }
+
+    // 4. If image is a base64 data URI (data:image/...;base64,...)
+    if (typeof image === 'string' && image.startsWith('data:image/')) {
+      const match = image.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+      if (match) {
+        let mime = match[1].toLowerCase();
+        if (mime === 'jpg') mime = 'jpeg';
+        if (mime === 'svg' || mime === 'svg+xml') {
+          res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+        } else {
+          res.setHeader('Content-Type', `image/${mime}`);
+        }
+        const buffer = Buffer.from(match[2], 'base64');
+        res.setHeader('Content-Length', buffer.length);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        return res.status(200).send(buffer);
+      }
+    }
+
+    // 5. If image is raw base64 string
+    if (typeof image === 'string' && image.length > 100 && !image.includes('<')) {
+      try {
+        let mime = 'jpeg';
+        if (image.startsWith('iVBORw0KGgo')) mime = 'png';
+        else if (image.startsWith('R0lGOD')) mime = 'gif';
+        else if (image.startsWith('UklGR')) mime = 'webp';
+        const buffer = Buffer.from(image, 'base64');
+        res.setHeader('Content-Type', `image/${mime}`);
+        res.setHeader('Content-Length', buffer.length);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        return res.status(200).send(buffer);
+      } catch (decodeErr) {
+        console.warn('Base64 decode error:', decodeErr.message);
+      }
+    }
+
+    // 6. Fallback: Return clean SVG product card placeholder
+    const escapeXml = (unsafe) =>
+      String(unsafe || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+
+    const shortId = escapeXml((id || '').slice(0, 8));
+    const title = escapeXml(productName);
+
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="primary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="360" rx="16" fill="url(#bg)"/>
+  <rect x="16" y="16" width="448" height="328" rx="12" fill="#1e293b" fill-opacity="0.6" stroke="#334155" stroke-width="2"/>
+  <circle cx="240" cy="130" r="50" fill="url(#primary)" fill-opacity="0.15" stroke="#6366f1" stroke-width="2.5"/>
+  <path d="M222 130L234 142L258 116" stroke="#818cf8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="240" y="225" text-anchor="middle" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="18" font-weight="700">${title}</text>
+  <text x="240" y="255" text-anchor="middle" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="13" font-weight="500">AuraTrack Inventory Photo</text>
+  <rect x="180" y="278" width="120" height="26" rx="13" fill="#334155"/>
+  <text x="240" y="295" text-anchor="middle" fill="#e2e8f0" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="11" font-weight="600">Réf: ${shortId}</text>
+</svg>`.trim();
+
+    res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.status(200).send(svg);
+  } catch (err) {
+    console.error('Serve product image error:', err.message);
+    res.status(500).json({ error: 'Server error serving image.' });
   }
 });
 

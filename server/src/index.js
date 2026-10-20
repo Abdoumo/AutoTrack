@@ -46,8 +46,9 @@ app.use(
   })
 );
 
-// 3. Body Parser with Payload Limit (Mitigates Large Payload Memory Exhaustion DoS)
-app.use(express.json({ limit: '50kb' }));
+// 3. Body Parser with Payload Limit (Allows product photo base64 uploads up to 10MB)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 4. Rate Limiters
 // General API rate limiter (protects against high-frequency DoS)

@@ -6,7 +6,7 @@
  * without broken links, security warnings, or missing images.
  */
 
-import ExcelJS from 'exceljs/dist/exceljs.min.js';
+import ExcelJS from 'exceljs';
 import { getRealisticProductPhoto } from './realPhotos.js';
 
 /**
@@ -523,13 +523,44 @@ export async function exportTransactionsToExcel(transactions = [], products = []
 }
 
 /**
+ * Resolves an accessible direct HTTP/HTTPS link to a product's photograph.
+ * Used for standard CSV exports so every product row has a clickable web URL.
+ */
+export function getProductImageLink(p) {
+  if (!p) return '';
+  // 1. External HTTP(S) URL
+  if (typeof p.image === 'string' && (p.image.startsWith('http://') || p.image.startsWith('https://'))) {
+    return p.image;
+  }
+  // 2. Relative URL
+  if (typeof p.image === 'string' && p.image.startsWith('/')) {
+    const origin = (typeof window !== 'undefined' && window.location?.origin) ? window.location.origin : 'http://localhost:5000';
+    return `${origin}${p.image}`;
+  }
+  // 3. Backend API image link
+  if (p.id) {
+    let base = 'http://localhost:5000';
+    if (typeof window !== 'undefined' && window.location) {
+      const { origin, hostname } = window.location;
+      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        base = origin;
+      } else {
+        base = 'http://localhost:5000';
+      }
+    }
+    return `${base}/api/products/${p.id}/image`;
+  }
+  return '';
+}
+
+/**
  * Export Products to CSV (Text-based standard, with explicit image references/links)
  */
 export function exportProductsToCSV(products = [], t = (k) => k) {
   const safeProducts = Array.isArray(products) ? products : [];
   const headers = [
     '#',
-    'Image (Réf / Type)',
+    'Image (Lien)',
     'Nom du Produit',
     'Réf Produit',
     'Stock Restant',
@@ -557,7 +588,7 @@ export function exportProductsToCSV(products = [], t = (k) => k) {
     const unit = p.unit === 'piece' ? 'pcs' : 'kg';
     const createdStr = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A';
     const riskStr = p.risk_date ? new Date(p.risk_date).toLocaleDateString() : 'N/A';
-    const imgDesc = p.image || '[Photo intégrée dans export .xlsx]';
+    const imgLink = getProductImageLink(p);
 
     let pieceWeightStr = '—';
     if (p.unit === 'piece') {
@@ -571,7 +602,7 @@ export function exportProductsToCSV(products = [], t = (k) => k) {
 
     return [
       sanitizeCsvValue(idx + 1),
-      sanitizeCsvValue(imgDesc),
+      sanitizeCsvValue(imgLink),
       sanitizeCsvValue(p.name),
       sanitizeCsvValue(p.id ? p.id.slice(0, 8) : 'N/A'),
       sanitizeCsvValue(`${p.remaining_qty || 0} ${unit}`),
@@ -605,6 +636,7 @@ export function exportTransactionsToCSV(transactions = [], products = [], t = (k
   const headers = [
     '#',
     'Produit Réclamé',
+    'Photo Produit (Lien)',
     'Réf Produit',
     'Utilisateur',
     'Email Utilisateur',
@@ -617,10 +649,12 @@ export function exportTransactionsToCSV(transactions = [], products = [], t = (k
   const rows = safeTransactions.map((item, idx) => {
     const product = productMap.get(item.product_id) || {};
     const prodName = item.product_name || product.name || 'Produit Inconnu';
+    const prodImgLink = getProductImageLink(product.id ? product : { id: item.product_id, image: item.product_image });
     const dateStr = item.taken_at ? new Date(item.taken_at).toLocaleString() : 'N/A';
     return [
       sanitizeCsvValue(idx + 1),
       sanitizeCsvValue(prodName),
+      sanitizeCsvValue(prodImgLink),
       sanitizeCsvValue(item.product_id ? item.product_id.slice(0, 8) : 'N/A'),
       sanitizeCsvValue(item.user_name || 'Utilisateur'),
       sanitizeCsvValue(item.user_email || 'N/A'),
