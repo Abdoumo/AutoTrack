@@ -98,6 +98,52 @@ export default function ProductModal({ isOpen, onClose, onSave, editingProduct =
     }
   };
 
+  const handleUnitChange = (newUnit) => {
+    setUnit(newUnit);
+    if (newUnit === 'kg') {
+      if (quantity) {
+        setWeight(quantity);
+      }
+    } else {
+      const q = parseFloat(quantity);
+      const pw = parseFloat(pieceWeight);
+      if (!isNaN(q) && q > 0 && !isNaN(pw) && pw > 0) {
+        setWeight(parseFloat((q * pw).toFixed(3)));
+      }
+    }
+  };
+
+  const handleQuantityChange = (val) => {
+    setQuantity(val);
+    if (unit === 'kg') {
+      setWeight(val);
+    } else {
+      const q = parseFloat(val);
+      const pw = parseFloat(pieceWeight);
+      if (!isNaN(q) && q > 0 && !isNaN(pw) && pw > 0) {
+        setWeight(parseFloat((q * pw).toFixed(3)));
+      }
+    }
+  };
+
+  const handlePieceWeightChange = (val) => {
+    setPieceWeight(val);
+    const pw = parseFloat(val);
+    const q = parseFloat(quantity);
+    if (!isNaN(pw) && pw > 0 && !isNaN(q) && q > 0) {
+      setWeight(parseFloat((q * pw).toFixed(3)));
+    }
+  };
+
+  const handleWeightChange = (val) => {
+    setWeight(val);
+    const w = parseFloat(val);
+    const q = parseFloat(quantity);
+    if (unit === 'piece' && !isNaN(w) && w > 0 && !isNaN(q) && q > 0) {
+      setPieceWeight(parseFloat((w / q).toFixed(4)));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmedName = name.trim();
@@ -110,6 +156,15 @@ export default function ProductModal({ isOpen, onClose, onSave, editingProduct =
     if (isNaN(parsedQty) || parsedQty <= 0) {
       setError('Veuillez fournir une quantité supérieure à 0.');
       return;
+    }
+
+    let parsedPieceWeight = 0;
+    if (unit === 'piece') {
+      parsedPieceWeight = parseFloat(pieceWeight);
+      if (isNaN(parsedPieceWeight) || parsedPieceWeight <= 0) {
+        setError('Veuillez fournir le poids d’une pièce supérieur à 0 kg.');
+        return;
+      }
     }
 
     const parsedWeight = parseFloat(weight);
@@ -127,6 +182,7 @@ export default function ProductModal({ isOpen, onClose, onSave, editingProduct =
         image: image.trim(),
         unit: unit,
         quantity: parsedQty,
+        piece_weight: unit === 'piece' ? parsedPieceWeight : (parsedQty > 0 ? parsedWeight / parsedQty : 1),
         weight: parsedWeight,
         description: description.trim(),
         risk_days: parseInt(riskDays, 10) || 10,
