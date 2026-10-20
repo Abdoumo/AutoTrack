@@ -14,6 +14,7 @@ export default function ProductModal({ isOpen, onClose, onSave, editingProduct =
   const [dragActive, setDragActive] = useState(false);
   const [unit, setUnit] = useState('piece'); // 'piece' | 'kg'
   const [quantity, setQuantity] = useState('');
+  const [pieceWeight, setPieceWeight] = useState('');
   const [weight, setWeight] = useState('');
   const [description, setDescription] = useState('');
   const [riskDays, setRiskDays] = useState(10);
@@ -26,9 +27,21 @@ export default function ProductModal({ isOpen, onClose, onSave, editingProduct =
         setPreviewId(editingProduct.id);
         setName(editingProduct.name || '');
         setImage(editingProduct.image || editingProduct.image_url || '');
-        setUnit(editingProduct.unit || 'piece');
-        setQuantity(editingProduct.quantity || editingProduct.weight || '');
-        setWeight(editingProduct.weight || '');
+        const currentUnit = editingProduct.unit || 'piece';
+        setUnit(currentUnit);
+        const qtyVal = editingProduct.quantity || editingProduct.weight || '';
+        setQuantity(qtyVal);
+        const weightVal = editingProduct.weight || '';
+        setWeight(weightVal);
+
+        if (editingProduct.piece_weight !== undefined && editingProduct.piece_weight !== null && Number(editingProduct.piece_weight) > 0) {
+          setPieceWeight(editingProduct.piece_weight);
+        } else if (currentUnit === 'piece' && parseFloat(qtyVal) > 0 && parseFloat(weightVal) > 0) {
+          setPieceWeight(parseFloat((parseFloat(weightVal) / parseFloat(qtyVal)).toFixed(3)));
+        } else {
+          setPieceWeight('');
+        }
+
         setDescription(editingProduct.description || '');
         setRiskDays(editingProduct.days_remaining !== undefined ? Math.max(1, editingProduct.days_remaining) : 10);
       } else {
@@ -37,6 +50,7 @@ export default function ProductModal({ isOpen, onClose, onSave, editingProduct =
         setImage('');
         setUnit('piece');
         setQuantity('');
+        setPieceWeight('');
         setWeight('');
         setDescription('');
         setRiskDays(10);
