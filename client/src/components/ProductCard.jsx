@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { getRealisticProductPhoto } from '../services/realPhotos';
+
 export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjustRisk }) {
   const { user, isAdmin } = useAuth();
   const { t } = useLanguage();
@@ -80,12 +82,9 @@ export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjus
           )}
         </div>
 
-        {/* Product Image Thumbnail (Rendered cleanly if photo exists) */}
+        {/* Product Image Thumbnail (Always rendered with real authentic photography) */}
         {(() => {
-          const rawImg = product.image || product.image_url;
-          if (!rawImg || typeof rawImg !== 'string' || rawImg.startsWith('data:image/svg+xml')) {
-            return null;
-          }
+          const displayPhoto = getRealisticProductPhoto(product);
           return (
             <div style={{
               width: '100%',
@@ -98,18 +97,13 @@ export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjus
               position: 'relative',
             }}>
               <img
-                src={rawImg}
+                src={displayPhoto}
                 alt={product.name}
                 style={{
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
                   display: 'block',
-                }}
-                onError={(e) => {
-                  if (e.currentTarget.parentElement) {
-                    e.currentTarget.parentElement.style.display = 'none';
-                  }
                 }}
               />
             </div>

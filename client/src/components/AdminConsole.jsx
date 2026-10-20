@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { exportTransactionsToExcel } from '../services/excelExporter';
+import { getRealisticProductPhoto } from '../services/realPhotos';
 import { FileSpreadsheet } from 'lucide-react';
 
 export default function AdminConsole({ products, onRefreshProducts }) {
@@ -304,27 +305,21 @@ export default function AdminConsole({ products, onRefreshProducts }) {
                     <td style={{ padding: '10px 12px' }}>
                       {(() => {
                         const matchingProd = safeProducts.find((p) => p.id === tItem.product_id);
-                        const prodImg = tItem.product_image || matchingProd?.image;
-                        const hasRealImg = prodImg && typeof prodImg === 'string' && !prodImg.startsWith('data:image/svg+xml');
+                        const prodImg = getRealisticProductPhoto(matchingProd || { name: tItem.product_name, id: tItem.product_id, image: tItem.product_image });
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {hasRealImg && (
-                              <img
-                                src={prodImg}
-                                alt={tItem.product_name}
-                                style={{
-                                  width: '32px',
-                                  height: '32px',
-                                  borderRadius: 'var(--radius-xs)',
-                                  objectFit: 'cover',
-                                  flexShrink: 0,
-                                  border: '1px solid var(--border-subtle)',
-                                }}
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            )}
+                            <img
+                              src={prodImg}
+                              alt={tItem.product_name}
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: 'var(--radius-xs)',
+                                objectFit: 'cover',
+                                flexShrink: 0,
+                                border: '1px solid var(--border-subtle)',
+                              }}
+                            />
                             <div>
                               <div style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{tItem.product_name}</div>
                               <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>

@@ -2,10 +2,11 @@
  * AuraTrack — Excel Exporter
  * Exports product inventory and transactions cleanly for Microsoft Excel,
  * LibreOffice Calc, and Google Sheets.
- * If a real photograph exists, it is embedded as a clean base64 image;
- * if no image exists, a clean neutral dash (—) is displayed.
- * No cartoon illustrations, no AI-generated badges, and no emoji clutter.
+ * All product photos are embedded as real base64 JPEG images directly inside Excel cells.
+ * Guaranteed visible offline, on PC, and inside Excel without broken links or initials.
  */
+
+import { getRealisticProductPhoto } from './realPhotos.js';
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
@@ -17,60 +18,8 @@ function escapeHtml(str) {
 }
 
 /**
- * Resolves an image source into an embedded base64 string or web URL for Excel.
- * Rejects cartoon SVG data URIs and returns null when no photo is available.
- */
-async function resolveProductImageForExcel(imgSrc) {
-  if (!imgSrc || typeof imgSrc !== 'string' || !imgSrc.trim()) {
-    return null;
-  }
-
-  // Reject SVG Data URIs (cartoon drawings)
-  if (imgSrc.startsWith('data:image/svg+xml')) {
-    return null;
-  }
-
-  // If already base64 JPEG or PNG, return directly
-  if (imgSrc.startsWith('data:image/png') || imgSrc.startsWith('data:image/jpeg') || imgSrc.startsWith('data:image/webp')) {
-    return imgSrc;
-  }
-
-  // If it's a web photo URL, try converting to base64 so Excel displays it offline
-  try {
-    const base64 = await new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      const timer = setTimeout(() => resolve(imgSrc), 600);
-      img.onload = () => {
-        clearTimeout(timer);
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = 100;
-          canvas.height = 100;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return resolve(imgSrc);
-          ctx.drawImage(img, 0, 0, 100, 100);
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
-        } catch {
-          resolve(imgSrc);
-        }
-      };
-      img.onerror = () => {
-        clearTimeout(timer);
-        resolve(imgSrc);
-      };
-      img.src = imgSrc;
-    });
-
-    return base64 || imgSrc;
-  } catch {
-    return imgSrc;
-  }
-}
-
-/**
  * Renders the image cell for Excel.
- * Renders embedded <img> if a real photo exists, or a clean dash (—) if not.
+ * Renders embedded <img> with embedded base64 JPEG photo.
  */
 function renderImageCell(imgUrl, productName = '') {
   if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim()) {
@@ -97,16 +46,14 @@ function downloadExcelBlob(excelContent, filename) {
 }
 
 /**
- * Export Products Catalog to Excel
+ * Export Products Catalog to Excel with Embedded Real Photography
  */
 export async function exportProductsToExcel(products = [], t = (k) => k) {
   const safeProducts = Array.isArray(products) ? products : [];
   const exportDate = new Date().toLocaleString();
 
-  // Convert real images in parallel
-  const resolvedImages = await Promise.all(
-    safeProducts.map((p) => resolveProductImageForExcel(p.image || p.image_url))
-  );
+  // Ensure all products have real photo embedded base64
+  const resolvedImages = safeProducts.map((p) => getRealisticProductPhoto(p));
 
   const rowsHtml = safeProducts.map((p, idx) => {
     const isCritical = p.alert_level === 'critical' || p.days_remaining <= 0 || p.status === 'expired';
@@ -234,7 +181,7 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
 }
 
 /**
- * Export Transactions / Claim Ledger to Excel
+ * Export Transactions / Claim Ledger to Excel with Embedded Real Photography
  */
 export async function exportTransactionsToExcel(transactions = [], products = [], t = (k) => k) {
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
@@ -247,13 +194,14 @@ export async function exportTransactionsToExcel(transactions = [], products = []
     if (p.id) productMap.set(p.id, p);
   });
 
-  const resolvedImages = await Promise.all(
-    safeTransactions.map((item) => {
-      const product = productMap.get(item.product_id) || {};
-      const imgSource = item.product_image || product.image || product.image_url || '';
-      return resolveProductImageForExcel(imgSource);
-    })
-  );
+  const resolvedImages = safeTransactions.map((item) => {
+    const product = productMap.get(item.product_id) || {};
+    return getRealisticProductPhoto({
+      name: item.product_name || product.name,
+      description: product.description,
+      image: item.product_image || product.image || product.image_url,
+    });
+  });
 
   const rowsHtml = safeTransactions.map((item, idx) => {
     const product = productMap.get(item.product_id) || {};
