@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { exportTransactionsToExcel } from '../services/excelExporter';
+import { exportTransactionsToExcel, exportTransactionsToCSV } from '../services/excelExporter';
 import { getRealisticProductPhoto } from '../services/realPhotos';
-import { FileSpreadsheet } from 'lucide-react';
+import { FileSpreadsheet, Download } from 'lucide-react';
 
 export default function AdminConsole({ products, onRefreshProducts }) {
   const { isAdmin } = useAuth();
@@ -43,6 +43,11 @@ export default function AdminConsole({ products, onRefreshProducts }) {
     } finally {
       setExporting(false);
     }
+  };
+
+  const handleExportCSV = () => {
+    const listToExport = filteredTransactions.length > 0 ? filteredTransactions : safeTransactions;
+    exportTransactionsToCSV(listToExport, safeProducts, t);
   };
 
   const filteredTransactions = safeTransactions.filter((t) => {
@@ -126,14 +131,26 @@ export default function AdminConsole({ products, onRefreshProducts }) {
           </button>
 
           <button
+            id="export-csv-btn"
+            onClick={handleExportCSV}
+            className="btn btn-secondary"
+            style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            title="Exporter les données au format texte brut CSV (sans photos)"
+          >
+            <Download size={14} />
+            <span>{t('export_csv')}</span>
+          </button>
+
+          <button
             id="export-excel-btn"
             onClick={handleExportExcel}
             className="btn btn-primary"
             style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
             disabled={exporting}
+            title="Télécharger le classeur Excel (.xlsx) avec les photos de produits intégrées dans les cellules"
           >
             <FileSpreadsheet size={15} />
-            <span>{exporting ? 'Génération...' : t('export_csv')}</span>
+            <span>{exporting ? 'Génération...' : t('export_excel')}</span>
           </button>
         </div>
       </div>

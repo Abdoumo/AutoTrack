@@ -13,8 +13,8 @@ import UserManagement from './components/UserManagement';
 import LoginScreen from './components/LoginScreen';
 import Footer from './components/Footer';
 import { api } from './services/api';
-import { exportProductsToExcel } from './services/excelExporter';
-import { Menu, Layers, FileSpreadsheet } from 'lucide-react';
+import { exportProductsToExcel, exportProductsToCSV } from './services/excelExporter';
+import { Menu, Layers, FileSpreadsheet, Download } from 'lucide-react';
 
 function DashboardContent() {
   const { user, isAdmin } = useAuth();
@@ -112,6 +112,10 @@ function DashboardContent() {
     } finally {
       setExportingCatalog(false);
     }
+  };
+
+  const handleExportProductsCSV = () => {
+    exportProductsToCSV(sortedProducts, t);
   };
 
   const safeProducts = Array.isArray(products) ? products : [];
@@ -413,6 +417,26 @@ function DashboardContent() {
                   )}
 
                   <button
+                    id="export-products-csv-btn"
+                    type="button"
+                    onClick={handleExportProductsCSV}
+                    className="btn btn-secondary"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '5px 10px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                    title="Télécharger les données au format texte brut CSV (sans photos)"
+                  >
+                    <Download size={13} />
+                    <span>{t('export_csv')}</span>
+                  </button>
+
+                  <button
                     id="export-products-excel-btn"
                     type="button"
                     onClick={handleExportProductsExcel}
@@ -427,7 +451,7 @@ function DashboardContent() {
                       fontWeight: '600',
                       cursor: 'pointer',
                     }}
-                    title="Sauvegarder Excel avec les images des produits"
+                    title="Sauvegarder un classeur Excel (.xlsx) avec les vraies photos de produits intégrées dans les cellules"
                   >
                     <FileSpreadsheet size={14} color="#10b981" />
                     <span>{exportingCatalog ? 'Génération...' : t('export_excel')}</span>
