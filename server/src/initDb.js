@@ -50,6 +50,7 @@ async function initDatabase() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
       ALTER TABLE products ADD COLUMN IF NOT EXISTS image TEXT;
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS piece_weight DECIMAL(12, 4) DEFAULT 0.0;
     `);
 
     // 3. Transactions Table

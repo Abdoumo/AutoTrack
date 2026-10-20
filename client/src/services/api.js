@@ -51,6 +51,8 @@ const INITIAL_DEMO_PRODUCTS = [
     unit: 'piece',
     quantity: 50.0,
     remaining_qty: 50.0,
+    piece_weight: 0.75,
+    weight: 37.5,
     description: 'Dark amber glass packaging bottles designed for oxidation-sensitive organic oils.',
     image: GLASS_BOTTLES_PHOTO,
     created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
@@ -345,6 +347,9 @@ export const api = {
 
     const qty = parseFloat(data.quantity) || 0;
     const weight = parseFloat(data.weight) || 0;
+    const pieceWeight = data.piece_weight !== undefined && data.piece_weight !== null
+      ? parseFloat(data.piece_weight)
+      : (data.unit === 'piece' && qty > 0 ? parseFloat((weight / qty).toFixed(3)) : 1);
     const unit = data.unit === 'piece' ? 'piece' : 'kg';
 
     const newProd = {
@@ -353,6 +358,7 @@ export const api = {
       unit: unit,
       quantity: qty,
       remaining_qty: qty,
+      piece_weight: pieceWeight,
       weight: weight,
       description: data.description || '',
       image: data.image || getProductImage(data),
@@ -392,6 +398,10 @@ export const api = {
       const newQty = data.quantity !== undefined ? parseFloat(data.quantity) : current.quantity;
       const deducted = Math.max(0, current.quantity - current.remaining_qty);
       const newRemaining = Math.max(0, newQty - deducted);
+      const newWeight = data.weight !== undefined ? parseFloat(data.weight) : current.weight;
+      const newPieceWeight = data.piece_weight !== undefined && data.piece_weight !== null
+        ? parseFloat(data.piece_weight)
+        : (data.unit === 'piece' && newQty > 0 ? parseFloat((newWeight / newQty).toFixed(3)) : current.piece_weight);
 
       products[index] = {
         ...current,
@@ -399,7 +409,8 @@ export const api = {
         unit: data.unit || current.unit,
         quantity: newQty,
         remaining_qty: newRemaining,
-        weight: data.weight !== undefined ? parseFloat(data.weight) : current.weight,
+        piece_weight: newPieceWeight,
+        weight: newWeight,
         description: data.description !== undefined ? data.description : current.description,
         image: data.image !== undefined ? data.image : current.image,
         status: newRemaining <= 0 ? 'depleted' : current.status,

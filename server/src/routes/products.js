@@ -96,7 +96,7 @@ router.get('/:id', auth, async (req, res) => {
  */
 router.post('/', auth, async (req, res) => {
   try {
-    const { name, unit = 'kg', quantity, weight = 0, description = '', risk_days, image = '' } = req.body;
+    const { name, unit = 'kg', quantity, weight = 0, piece_weight, description = '', risk_days, image = '' } = req.body;
 
     const cleanName = validateName(name);
     if (!cleanName) {
@@ -115,6 +115,8 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ error: 'Le poids doit être un nombre positif ou nul (>= 0).' });
     }
 
+    const parsedPieceWeight = validatePositiveNumber(piece_weight, 0) || (chosenUnit === 'piece' && parsedQty > 0 ? parsedWeight / parsedQty : 1);
+
     const cleanDesc = typeof description === 'string' ? description.trim().slice(0, 2000) : '';
 
     const days = parseInt(risk_days, 10);
@@ -127,13 +129,20 @@ router.post('/', auth, async (req, res) => {
     let result;
     try {
       result = await pool.query(
-        `INSERT INTO products (name, unit, quantity, remaining_qty, weight, description, risk_date, created_by, image)
-         VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO products (name, unit, quantity, remaining_qty, weight, piece_weight, description, risk_date, created_by, image)
+         VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8, $9)
          RETURNING *`,
-        [cleanName, chosenUnit, parsedQty, parsedWeight, cleanDesc, riskDate.toISOString(), req.user.id, imgVal]
+        [cleanName, chosenUnit, parsedQty, parsedWeight, parsedPieceWeight, cleanDesc, riskDate.toISOString(), req.user.id, imgVal]
       );
     } catch (colErr) {
-      if (colErr.message && colErr.message.includes('image')) {
+      try {
+        result = await pool.query(
+          `INSERT INTO products (name, unit, quantity, remaining_qty, weight, description, risk_date, created_by, image)
+           VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8)
+           RETURNING *`,
+          [cleanName, chosenUnit, parsedQty, parsedWeight, cleanDesc, riskDate.toISOString(), req.user.id, imgVal]
+        );
+      } catch (innerErr) {
         result = await pool.query(
           `INSERT INTO products (name, unit, quantity, remaining_qty, weight, description, risk_date, created_by)
            VALUES ($1, $2, $3, $3, $4, $5, $6, $7)
@@ -143,9 +152,11 @@ router.post('/', auth, async (req, res) => {
         if (result.rows[0]) {
           result.rows[0].image = imgVal;
         }
-      } else {
-        throw colErr;
       }
+    }
+
+    if (result.rows[0] && result.rows[0].piece_weight === undefined) {
+      result.rows[0].piece_weight = parsedPieceWeight;
     }
 
     res.status(201).json(result.rows[0]);
@@ -220,17 +231,33 @@ router.put('/:id', auth, async (req, res) => {
     const newRemaining = Math.max(0, newQty - deducted);
     const newStatus = newRemaining <= 0 ? 'depleted' : current.status;
 
+    let newPieceWeight = current.piece_weight;
+    if (req.body.piece_weight !== undefined) {
+      const validPw = validatePositiveNumber(req.body.piece_weight, 0);
+      if (validPw !== null) newPieceWeight = validPw;
+    } else if (newUnit === 'piece' && newQty > 0 && newWeight > 0) {
+      newPieceWeight = parseFloat((newWeight / newQty).toFixed(4));
+    }
+
     let result;
     try {
       result = await pool.query(
         `UPDATE products 
-         SET name = $1, unit = $2, quantity = $3, remaining_qty = $4, weight = $5, description = $6, risk_date = $7, status = $8, image = $9
-         WHERE id = $10
+         SET name = $1, unit = $2, quantity = $3, remaining_qty = $4, weight = $5, piece_weight = $6, description = $7, risk_date = $8, status = $9, image = $10
+         WHERE id = $11
          RETURNING *`,
-        [newName, newUnit, newQty, newRemaining, newWeight, newDesc, newRiskDate, newStatus, newImage, id]
+        [newName, newUnit, newQty, newRemaining, newWeight, newPieceWeight, newDesc, newRiskDate, newStatus, newImage, id]
       );
     } catch (colErr) {
-      if (colErr.message && colErr.message.includes('image')) {
+      try {
+        result = await pool.query(
+          `UPDATE products 
+           SET name = $1, unit = $2, quantity = $3, remaining_qty = $4, weight = $5, description = $6, risk_date = $7, status = $8, image = $9
+           WHERE id = $10
+           RETURNING *`,
+          [newName, newUnit, newQty, newRemaining, newWeight, newDesc, newRiskDate, newStatus, newImage, id]
+        );
+      } catch (innerErr) {
         result = await pool.query(
           `UPDATE products 
            SET name = $1, unit = $2, quantity = $3, remaining_qty = $4, weight = $5, description = $6, risk_date = $7, status = $8
@@ -241,9 +268,11 @@ router.put('/:id', auth, async (req, res) => {
         if (result.rows[0]) {
           result.rows[0].image = newImage;
         }
-      } else {
-        throw colErr;
       }
+    }
+
+    if (result.rows[0] && result.rows[0].piece_weight === undefined) {
+      result.rows[0].piece_weight = newPieceWeight;
     }
 
     res.json(result.rows[0]);

@@ -125,9 +125,10 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
     { key: 'image', width: 14 },
     { key: 'name', width: 34 },
     { key: 'ref', width: 14 },
-    { key: 'rem_qty', width: 16 },
-    { key: 'init_qty', width: 16 },
-    { key: 'weight', width: 14 },
+    { key: 'rem_qty', width: 15 },
+    { key: 'init_qty', width: 15 },
+    { key: 'piece_weight', width: 16 },
+    { key: 'weight', width: 15 },
     { key: 'delay', width: 14 },
     { key: 'risk_date', width: 14 },
     { key: 'status', width: 28 },
@@ -137,7 +138,7 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
   ];
 
   // 1. Title Banner
-  worksheet.mergeCells('A1:M1');
+  worksheet.mergeCells('A1:N1');
   const titleCell = worksheet.getCell('A1');
   titleCell.value = 'AuraTrack — Inventaire des Produits & Gestion des Risques';
   titleCell.font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -146,7 +147,7 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
   worksheet.getRow(1).height = 36;
 
   // 2. Subtitle / Metadata
-  worksheet.mergeCells('A2:M2');
+  worksheet.mergeCells('A2:N2');
   const metaCell = worksheet.getCell('A2');
   metaCell.value = `Exporté le ${exportDate} • ${safeProducts.length} produit(s) répertorié(s) • Photos studio intégrées dans les cellules`;
   metaCell.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF64748B' } };
@@ -164,6 +165,7 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
     'Réf',
     'Stock Restant',
     'Stock Initial',
+    'Poids par pièce',
     'Poids Total',
     'Délai Risque',
     'Échéance',
@@ -237,6 +239,18 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
     const unitLabel = p.unit === 'piece' ? 'pcs' : 'kg';
     const delayStr = p.days_remaining !== undefined ? `${p.days_remaining} j` : '10 j';
 
+    let pieceWeightStr = '—';
+    if (p.unit === 'piece') {
+      const pw = (p.piece_weight !== undefined && p.piece_weight !== null && Number(p.piece_weight) > 0)
+        ? Number(p.piece_weight)
+        : (parseFloat(p.quantity) > 0 && parseFloat(p.weight) > 0 ? parseFloat(p.weight) / parseFloat(p.quantity) : 0);
+      pieceWeightStr = pw > 0 ? `${parseFloat(pw.toFixed(3))} kg` : 'N/A';
+    } else {
+      pieceWeightStr = '1 kg';
+    }
+
+    const totalWeightStr = `${p.weight || 0} kg`;
+
     const row = worksheet.getRow(currentRowNum);
     row.height = 50; // Room for 44px photo + padding
 
@@ -247,7 +261,8 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
       p.id ? p.id.slice(0, 8) : 'N/A',
       `${p.remaining_qty || 0} ${unitLabel}`,
       `${p.quantity || p.weight || 0} ${unitLabel}`,
-      `${p.weight || 0} kg`,
+      pieceWeightStr,
+      totalWeightStr,
       delayStr,
       riskStr,
       statusLabel,
@@ -272,9 +287,9 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
       cell.alignment = { vertical: 'middle' };
 
       // Column-specific alignments
-      if (colNumber === 1 || colNumber === 2 || colNumber === 4 || colNumber === 8 || colNumber === 9 || colNumber === 12) {
+      if (colNumber === 1 || colNumber === 2 || colNumber === 4 || colNumber === 9 || colNumber === 10 || colNumber === 13) {
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
-      } else if (colNumber === 5 || colNumber === 6 || colNumber === 7) {
+      } else if (colNumber === 5 || colNumber === 6 || colNumber === 7 || colNumber === 8) {
         cell.alignment = { vertical: 'middle', horizontal: 'right' };
       }
     });
@@ -283,9 +298,11 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
     row.getCell(3).font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
     row.getCell(4).font = { name: 'Consolas', size: 9, color: { argb: 'FF64748B' } };
     row.getCell(5).font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF1E293B' } };
+    row.getCell(7).font = { name: 'Segoe UI', size: 9.5, color: { argb: 'FF475569' } };
+    row.getCell(8).font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF1E293B' } };
 
     // Delay column styling
-    const delayCell = row.getCell(8);
+    const delayCell = row.getCell(9);
     delayCell.font = {
       name: 'Segoe UI',
       size: 9.5,
@@ -294,7 +311,7 @@ export async function exportProductsToExcel(products = [], t = (k) => k) {
     };
 
     // Status Badge styling
-    const statusCell = row.getCell(10);
+    const statusCell = row.getCell(11);
     statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: statusBg } };
     statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: statusFg } };
     statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -517,7 +534,8 @@ export function exportProductsToCSV(products = [], t = (k) => k) {
     'Réf Produit',
     'Stock Restant',
     'Stock Initial',
-    'Poids Total (kg)',
+    'Poids par pièce',
+    'Poids Total',
     'Délai Risque (j)',
     'Échéance',
     'Statut Risque',
@@ -541,6 +559,16 @@ export function exportProductsToCSV(products = [], t = (k) => k) {
     const riskStr = p.risk_date ? new Date(p.risk_date).toLocaleDateString() : 'N/A';
     const imgDesc = p.image || '[Photo intégrée dans export .xlsx]';
 
+    let pieceWeightStr = '—';
+    if (p.unit === 'piece') {
+      const pw = (p.piece_weight !== undefined && p.piece_weight !== null && Number(p.piece_weight) > 0)
+        ? Number(p.piece_weight)
+        : (parseFloat(p.quantity) > 0 && parseFloat(p.weight) > 0 ? parseFloat(p.weight) / parseFloat(p.quantity) : 0);
+      pieceWeightStr = pw > 0 ? `${parseFloat(pw.toFixed(3))} kg` : 'N/A';
+    } else {
+      pieceWeightStr = '1 kg';
+    }
+
     return [
       sanitizeCsvValue(idx + 1),
       sanitizeCsvValue(imgDesc),
@@ -548,7 +576,8 @@ export function exportProductsToCSV(products = [], t = (k) => k) {
       sanitizeCsvValue(p.id ? p.id.slice(0, 8) : 'N/A'),
       sanitizeCsvValue(`${p.remaining_qty || 0} ${unit}`),
       sanitizeCsvValue(`${p.quantity || p.weight || 0} ${unit}`),
-      sanitizeCsvValue(p.weight || 0),
+      sanitizeCsvValue(pieceWeightStr),
+      sanitizeCsvValue(`${p.weight || 0} kg`),
       sanitizeCsvValue(p.days_remaining !== undefined ? p.days_remaining : 10),
       sanitizeCsvValue(riskStr),
       sanitizeCsvValue(status),
