@@ -1,8 +1,10 @@
 /**
- * AuraTrack — Excel Exporter with Embedded Product Images
- * Generates rich HTML-based Excel spreadsheets (.xls) that native Excel, 
- * LibreOffice, and Google Sheets render with inline product image thumbnails,
- * styled headers, risk status badges, and formatted columns.
+ * AuraTrack — Excel Exporter
+ * Exports product inventory and transactions cleanly for Microsoft Excel,
+ * LibreOffice Calc, and Google Sheets.
+ * If a real photograph exists, it is embedded as a clean base64 image;
+ * if no image exists, a clean neutral dash (—) is displayed.
+ * No cartoon illustrations, no AI-generated badges, and no emoji clutter.
  */
 
 function escapeHtml(str) {
@@ -15,20 +17,68 @@ function escapeHtml(str) {
 }
 
 /**
- * Format image cell for Excel.
- * If data URI or web URL, renders <img> tag.
- * If missing, renders a clean product initial fallback.
+ * Resolves an image source into an embedded base64 string or web URL for Excel.
+ * Rejects cartoon SVG data URIs and returns null when no photo is available.
  */
-function renderImageCell(imageUrl, productName = '') {
-  if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim()) {
+async function resolveProductImageForExcel(imgSrc) {
+  if (!imgSrc || typeof imgSrc !== 'string' || !imgSrc.trim()) {
+    return null;
+  }
+
+  // Reject SVG Data URIs (cartoon drawings)
+  if (imgSrc.startsWith('data:image/svg+xml')) {
+    return null;
+  }
+
+  // If already base64 JPEG or PNG, return directly
+  if (imgSrc.startsWith('data:image/png') || imgSrc.startsWith('data:image/jpeg') || imgSrc.startsWith('data:image/webp')) {
+    return imgSrc;
+  }
+
+  // If it's a web photo URL, try converting to base64 so Excel displays it offline
+  try {
+    const base64 = await new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const timer = setTimeout(() => resolve(imgSrc), 600);
+      img.onload = () => {
+        clearTimeout(timer);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 100;
+          canvas.height = 100;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(imgSrc);
+          ctx.drawImage(img, 0, 0, 100, 100);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        } catch {
+          resolve(imgSrc);
+        }
+      };
+      img.onerror = () => {
+        clearTimeout(timer);
+        resolve(imgSrc);
+      };
+      img.src = imgSrc;
+    });
+
+    return base64 || imgSrc;
+  } catch {
+    return imgSrc;
+  }
+}
+
+/**
+ * Renders the image cell for Excel.
+ * Renders embedded <img> if a real photo exists, or a clean dash (—) if not.
+ */
+function renderImageCell(imgUrl, productName = '') {
+  if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim()) {
     return `<div style="text-align: center;">
-      <img src="${escapeHtml(imageUrl)}" width="56" height="56" style="width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; display: block; margin: 0 auto;" />
+      <img src="${escapeHtml(imgUrl)}" width="50" height="50" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; display: block; margin: 0 auto;" alt="${escapeHtml(productName)}" />
     </div>`;
   }
-  const initial = productName ? productName.charAt(0).toUpperCase() : 'P';
-  return `<div style="width: 50px; height: 50px; background-color: #e0e7ff; color: #4338ca; border-radius: 6px; text-align: center; line-height: 50px; font-weight: bold; font-size: 16pt; margin: 0 auto;">
-    ${initial}
-  </div>`;
+  return `<div style="text-align: center; color: #94a3b8; font-size: 10pt;">—</div>`;
 }
 
 /**
@@ -47,11 +97,16 @@ function downloadExcelBlob(excelContent, filename) {
 }
 
 /**
- * Export Products Catalog to Excel with Product Images
+ * Export Products Catalog to Excel
  */
-export function exportProductsToExcel(products = [], t = (k) => k) {
+export async function exportProductsToExcel(products = [], t = (k) => k) {
   const safeProducts = Array.isArray(products) ? products : [];
   const exportDate = new Date().toLocaleString();
+
+  // Convert real images in parallel
+  const resolvedImages = await Promise.all(
+    safeProducts.map((p) => resolveProductImageForExcel(p.image || p.image_url))
+  );
 
   const rowsHtml = safeProducts.map((p, idx) => {
     const isCritical = p.alert_level === 'critical' || p.days_remaining <= 0 || p.status === 'expired';
@@ -79,11 +134,12 @@ export function exportProductsToExcel(products = [], t = (k) => k) {
     const createdStr = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A';
     const riskStr = p.risk_date ? new Date(p.risk_date).toLocaleDateString() : 'N/A';
     const unitLabel = p.unit === 'piece' ? 'pcs' : 'kg';
+    const imageSource = resolvedImages[idx];
 
     return `
-      <tr style="height: 66px;">
+      <tr style="height: 58px;">
         <td style="text-align: center; vertical-align: middle;">${idx + 1}</td>
-        <td style="text-align: center; vertical-align: middle;">${renderImageCell(p.image, p.name)}</td>
+        <td style="text-align: center; vertical-align: middle;">${renderImageCell(imageSource, p.name)}</td>
         <td style="vertical-align: middle; font-weight: bold; color: #0f172a;">${escapeHtml(p.name)}</td>
         <td style="vertical-align: middle; font-family: monospace; font-size: 9pt; color: #64748b;">${escapeHtml(p.id ? p.id.slice(0, 8) : 'N/A')}</td>
         <td style="vertical-align: middle; text-align: right; font-weight: bold; color: #1e293b;">${p.remaining_qty || 0} ${unitLabel}</td>
@@ -125,7 +181,7 @@ export function exportProductsToExcel(products = [], t = (k) => k) {
         <![endif]-->
         <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; color: #1e293b; }
-          .report-title { font-size: 16pt; font-weight: bold; color: #4338ca; margin-bottom: 4px; }
+          .report-title { font-size: 16pt; font-weight: bold; color: #1e293b; margin-bottom: 4px; }
           .report-meta { font-size: 9pt; color: #64748b; margin-bottom: 14px; }
           table { border-collapse: collapse; width: 100%; }
           th { 
@@ -146,7 +202,7 @@ export function exportProductsToExcel(products = [], t = (k) => k) {
         </style>
       </head>
       <body>
-        <div class="report-title">📦 Inventaire des Produits avec Images</div>
+        <div class="report-title">Inventaire des Produits</div>
         <div class="report-meta">Exporté le ${exportDate} • ${safeProducts.length} produit(s) répertorié(s) • AuraTrack System</div>
         <table>
           <thead>
@@ -174,33 +230,41 @@ export function exportProductsToExcel(products = [], t = (k) => k) {
     </html>
   `;
 
-  downloadExcelBlob(excelHtml, `auratrack_produits_images_${new Date().toISOString().split('T')[0]}.xls`);
+  downloadExcelBlob(excelHtml, `auratrack_produits_${new Date().toISOString().split('T')[0]}.xls`);
 }
 
 /**
- * Export Transactions / Claim Ledger to Excel with Product Images
+ * Export Transactions / Claim Ledger to Excel
  */
-export function exportTransactionsToExcel(transactions = [], products = [], t = (k) => k) {
+export async function exportTransactionsToExcel(transactions = [], products = [], t = (k) => k) {
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
   const safeProducts = Array.isArray(products) ? products : [];
   const exportDate = new Date().toLocaleString();
 
   // Create product lookup map for images and details
   const productMap = new Map();
-  safeProducts.forEach(p => {
+  safeProducts.forEach((p) => {
     if (p.id) productMap.set(p.id, p);
   });
 
+  const resolvedImages = await Promise.all(
+    safeTransactions.map((item) => {
+      const product = productMap.get(item.product_id) || {};
+      const imgSource = item.product_image || product.image || product.image_url || '';
+      return resolveProductImageForExcel(imgSource);
+    })
+  );
+
   const rowsHtml = safeTransactions.map((item, idx) => {
     const product = productMap.get(item.product_id) || {};
-    const imgSource = item.product_image || product.image || '';
     const prodName = item.product_name || product.name || 'Produit Inconnu';
     const dateStr = item.taken_at ? new Date(item.taken_at).toLocaleString() : 'N/A';
+    const imageSource = resolvedImages[idx];
 
     return `
-      <tr style="height: 66px;">
+      <tr style="height: 58px;">
         <td style="text-align: center; vertical-align: middle;">${idx + 1}</td>
-        <td style="text-align: center; vertical-align: middle;">${renderImageCell(imgSource, prodName)}</td>
+        <td style="text-align: center; vertical-align: middle;">${renderImageCell(imageSource, prodName)}</td>
         <td style="vertical-align: middle; font-weight: bold; color: #0f172a;">${escapeHtml(prodName)}</td>
         <td style="vertical-align: middle; font-family: monospace; font-size: 9pt; color: #64748b;">${escapeHtml(item.product_id ? item.product_id.slice(0, 8) : 'N/A')}</td>
         <td style="vertical-align: middle;">
@@ -237,7 +301,7 @@ export function exportTransactionsToExcel(transactions = [], products = [], t = 
         <![endif]-->
         <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; color: #1e293b; }
-          .report-title { font-size: 16pt; font-weight: bold; color: #4338ca; margin-bottom: 4px; }
+          .report-title { font-size: 16pt; font-weight: bold; color: #1e293b; margin-bottom: 4px; }
           .report-meta { font-size: 9pt; color: #64748b; margin-bottom: 14px; }
           table { border-collapse: collapse; width: 100%; }
           th { 
@@ -258,7 +322,7 @@ export function exportTransactionsToExcel(transactions = [], products = [], t = 
         </style>
       </head>
       <body>
-        <div class="report-title">📊 Journal des Réclamations & Expéditions avec Images</div>
+        <div class="report-title">Journal des Réclamations &amp; Expéditions</div>
         <div class="report-meta">Exporté le ${exportDate} • ${safeTransactions.length} transaction(s) • AuraTrack Audit</div>
         <table>
           <thead>
@@ -282,5 +346,5 @@ export function exportTransactionsToExcel(transactions = [], products = [], t = 
     </html>
   `;
 
-  downloadExcelBlob(excelHtml, `auratrack_transactions_images_${new Date().toISOString().split('T')[0]}.xls`);
+  downloadExcelBlob(excelHtml, `auratrack_transactions_${new Date().toISOString().split('T')[0]}.xls`);
 }

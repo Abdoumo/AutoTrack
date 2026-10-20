@@ -32,11 +32,11 @@ export default function AdminConsole({ products, onRefreshProducts }) {
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
   const safeProducts = Array.isArray(products) ? products : [];
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     try {
       setExporting(true);
       const listToExport = filteredTransactions.length > 0 ? filteredTransactions : safeTransactions;
-      exportTransactionsToExcel(listToExport, safeProducts, t);
+      await exportTransactionsToExcel(listToExport, safeProducts, t);
     } catch (err) {
       console.error('Excel Export failed', err);
     } finally {
@@ -305,9 +305,10 @@ export default function AdminConsole({ products, onRefreshProducts }) {
                       {(() => {
                         const matchingProd = safeProducts.find((p) => p.id === tItem.product_id);
                         const prodImg = tItem.product_image || matchingProd?.image;
+                        const hasRealImg = prodImg && typeof prodImg === 'string' && !prodImg.startsWith('data:image/svg+xml');
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {prodImg ? (
+                            {hasRealImg && (
                               <img
                                 src={prodImg}
                                 alt={tItem.product_name}
@@ -319,25 +320,10 @@ export default function AdminConsole({ products, onRefreshProducts }) {
                                   flexShrink: 0,
                                   border: '1px solid var(--border-subtle)',
                                 }}
-                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
                               />
-                            ) : (
-                              <div style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: 'var(--radius-xs)',
-                                background: 'var(--bg-surface-elevated)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '11px',
-                                fontWeight: '700',
-                                color: 'var(--text-muted)',
-                                flexShrink: 0,
-                                border: '1px solid var(--border-subtle)',
-                              }}>
-                                {(tItem.product_name || 'P').charAt(0).toUpperCase()}
-                              </div>
                             )}
                             <div>
                               <div style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{tItem.product_name}</div>

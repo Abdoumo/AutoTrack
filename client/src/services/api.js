@@ -16,7 +16,7 @@ const STORAGE_KEYS = {
 };
 
 /**
- * Initial demo products when running without database
+ * Initial demo products with real photography (no cartoon icons or AI graphics)
  */
 const INITIAL_DEMO_PRODUCTS = [
   {
@@ -27,7 +27,7 @@ const INITIAL_DEMO_PRODUCTS = [
     remaining_qty: 12.5,
     weight: 45.0,
     description: 'High-elevation roasted Arabica coffee beans. Packaged in nitrogen-sealed valved foil.',
-    image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&auto=format&fit=crop&q=80',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
     risk_date: new Date(Date.now() - 1 * 86400000).toISOString(),
     status: 'expired',
@@ -44,7 +44,7 @@ const INITIAL_DEMO_PRODUCTS = [
     remaining_qty: 50.0,
     weight: 37.5,
     description: 'Dark amber glass packaging bottles designed for oxidation-sensitive organic oils.',
-    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=600&auto=format&fit=crop&q=80',
     created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
     risk_date: new Date(Date.now() + 3 * 86400000).toISOString(),
     status: 'active',
@@ -61,7 +61,7 @@ const INITIAL_DEMO_PRODUCTS = [
     remaining_qty: 48.0,
     weight: 60.0,
     description: 'Freshly harvested unpasteurized honey from high-altitude wild blossoms.',
-    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=500&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&auto=format&fit=crop&q=80',
     created_at: new Date().toISOString(),
     risk_date: new Date(Date.now() + 10 * 86400000).toISOString(),
     status: 'active',
@@ -261,6 +261,30 @@ export const api = {
     if (!Array.isArray(products) || products.length === 0) {
       products = INITIAL_DEMO_PRODUCTS;
       setStorage(STORAGE_KEYS.PRODUCTS, products);
+    } else {
+      // Clean up any old cartoon SVGs and ensure realistic photography
+      let updated = false;
+      products = products.map((p) => {
+        const currentImg = p.image || p.image_url || '';
+        // If image has an old cartoon SVG Data URI, replace with real photography
+        if (typeof currentImg === 'string' && currentImg.startsWith('data:image/svg+xml')) {
+          updated = true;
+          if (p.id === 'f47ac10b-58cc-4372-a567-0e02b2c3d479') {
+            return { ...p, image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&auto=format&fit=crop&q=80' };
+          }
+          if (p.id === '8a9c13b2-6d2e-4b91-9871-2b63718910ac') {
+            return { ...p, image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=600&auto=format&fit=crop&q=80' };
+          }
+          if (p.id === '3c12d45a-8b9e-4c77-b912-98ab23cd45ef') {
+            return { ...p, image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&auto=format&fit=crop&q=80' };
+          }
+          return { ...p, image: '' };
+        }
+        return p;
+      });
+      if (updated) {
+        setStorage(STORAGE_KEYS.PRODUCTS, products);
+      }
     }
 
     return products.map((p) => {
@@ -332,7 +356,7 @@ export const api = {
       remaining_qty: qty,
       weight: weight,
       description: data.description || '',
-      image: data.image || '',
+      image: data.image || getProductImage(data),
       created_at: new Date().toISOString(),
       risk_date: riskDate.toISOString(),
       status: 'active',

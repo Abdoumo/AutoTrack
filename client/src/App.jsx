@@ -36,6 +36,7 @@ function DashboardContent() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('risk'); // 'risk' | 'name' | 'date' | 'quantity'
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
+  const [exportingCatalog, setExportingCatalog] = useState(false);
 
   const fetchProducts = async () => {
     try {
@@ -100,6 +101,17 @@ function DashboardContent() {
   const handleSaveRiskDate = async (productId, newDate) => {
     await api.updateRiskDate(productId, newDate);
     await fetchProducts();
+  };
+
+  const handleExportProductsExcel = async () => {
+    try {
+      setExportingCatalog(true);
+      await exportProductsToExcel(sortedProducts, t);
+    } catch (err) {
+      console.error('Excel Export failed', err);
+    } finally {
+      setExportingCatalog(false);
+    }
   };
 
   const safeProducts = Array.isArray(products) ? products : [];
@@ -327,8 +339,8 @@ function DashboardContent() {
                 borderTop: '1px solid var(--border-subtle)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span>⚡</span> {t('sort_label')}
+                  <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                    {t('sort_label')}
                   </span>
 
                   {/* Sort criteria select */}
@@ -403,7 +415,8 @@ function DashboardContent() {
                   <button
                     id="export-products-excel-btn"
                     type="button"
-                    onClick={() => exportProductsToExcel(sortedProducts, t)}
+                    onClick={handleExportProductsExcel}
+                    disabled={exportingCatalog}
                     className="btn btn-secondary"
                     style={{
                       display: 'inline-flex',
@@ -417,7 +430,7 @@ function DashboardContent() {
                     title="Sauvegarder Excel avec les images des produits"
                   >
                     <FileSpreadsheet size={14} color="#10b981" />
-                    <span>{t('export_excel')}</span>
+                    <span>{exportingCatalog ? 'Génération...' : t('export_excel')}</span>
                   </button>
                 </div>
               </div>

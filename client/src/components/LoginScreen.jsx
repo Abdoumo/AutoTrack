@@ -310,8 +310,7 @@ export default function LoginScreen() {
               letterSpacing: '0.04em',
               fontWeight: '600',
             }}>
-              <span>⚡</span>
-              <span>{lang === 'fr' ? 'Accès Démo 1-Clic' : '1-Click Demo Access'}</span>
+              <span>{lang === 'fr' ? 'Comptes de test' : 'Test Accounts'}</span>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -337,7 +336,7 @@ export default function LoginScreen() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)'; }}
               >
-                <span>🛡️ Super Admin</span>
+                <span>Super Admin</span>
                 <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>bedoushop@gmail.com</span>
               </button>
 
@@ -363,7 +362,7 @@ export default function LoginScreen() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'; }}
               >
-                <span>👤 {lang === 'fr' ? 'Utilisateur' : 'User'}</span>
+                <span>{lang === 'fr' ? 'Utilisateur' : 'User'}</span>
                 <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>nadia@store.com</span>
               </button>
             </div>

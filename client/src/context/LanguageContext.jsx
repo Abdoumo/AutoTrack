@@ -45,7 +45,7 @@ export const translations = {
     sort_qty: 'Stock disponible',
     sort_asc: 'Croissant',
     sort_desc: 'Décroissant',
-    at_risk_badge: '⚠️ Produits à risque en premier',
+    at_risk_badge: 'Produits prioritaires / à risque',
 
     // Product Card
     ref: 'RÉF',
@@ -204,7 +204,7 @@ export const translations = {
     sort_qty: 'Stock Available',
     sort_asc: 'Ascending',
     sort_desc: 'Descending',
-    at_risk_badge: '⚠️ At-risk products first',
+    at_risk_badge: 'Priority / at-risk products first',
 
     // Product Card
     ref: 'REF',

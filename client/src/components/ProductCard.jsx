@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-
 export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjustRisk }) {
   const { user, isAdmin } = useAuth();
   const { t } = useLanguage();
@@ -81,31 +80,41 @@ export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjus
           )}
         </div>
 
-        {/* Product Image Thumbnail */}
-        {product.image && (
-          <div style={{
-            width: '100%',
-            height: '135px',
-            borderRadius: 'var(--radius-sm)',
-            overflow: 'hidden',
-            marginBottom: '12px',
-            background: 'var(--bg-input)',
-            border: '1px solid var(--border-subtle)',
-            position: 'relative',
-          }}>
-            <img
-              src={product.image}
-              alt={product.name}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
-              onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
-            />
-          </div>
-        )}
+        {/* Product Image Thumbnail (Rendered cleanly if photo exists) */}
+        {(() => {
+          const rawImg = product.image || product.image_url;
+          if (!rawImg || typeof rawImg !== 'string' || rawImg.startsWith('data:image/svg+xml')) {
+            return null;
+          }
+          return (
+            <div style={{
+              width: '100%',
+              height: '140px',
+              borderRadius: 'var(--radius-sm)',
+              overflow: 'hidden',
+              marginBottom: '12px',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border-subtle)',
+              position: 'relative',
+            }}>
+              <img
+                src={rawImg}
+                alt={product.name}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+                onError={(e) => {
+                  if (e.currentTarget.parentElement) {
+                    e.currentTarget.parentElement.style.display = 'none';
+                  }
+                }}
+              />
+            </div>
+          );
+        })()}
 
         {/* Product Title */}
         <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', lineHeight: 1.35, marginBottom: '6px' }}>
