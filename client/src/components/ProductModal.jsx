@@ -480,56 +480,142 @@ export default function ProductModal({ isOpen, onClose, onSave, editingProduct =
               <button
                 type="button"
                 className={`unit-btn ${unit === 'piece' ? 'active' : ''}`}
-                onClick={() => setUnit('piece')}
+                onClick={() => handleUnitChange('piece')}
               >
                 {t('unit_piece')}
               </button>
               <button
                 type="button"
                 className={`unit-btn ${unit === 'kg' ? 'active' : ''}`}
-                onClick={() => setUnit('kg')}
+                onClick={() => handleUnitChange('kg')}
               >
                 {t('unit_kg')}
               </button>
             </div>
           </div>
 
-          {/* Dual Row: Quantity & Weight */}
-          <div className="dual-field-row">
-            <div className="field-group">
-              <label className="field-label" htmlFor="prod-qty">
-                {t('initial_qty_label')} ({unit === 'piece' ? 'pcs' : 'kg'}) *
-              </label>
-              <input
-                id="prod-qty"
-                type="number"
-                step={unit === 'piece' ? '1' : '0.01'}
-                min={unit === 'piece' ? '1' : '0.01'}
-                className="field-input"
-                placeholder={unit === 'piece' ? 'e.g. 50' : 'e.g. 25.50'}
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                required
-              />
-            </div>
+          {/* Fields: Quantity, Piece Weight & Total Weight */}
+          {unit === 'piece' ? (
+            <div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                gap: '10px',
+                marginBottom: '10px',
+              }}>
+                <div className="field-group" style={{ marginBottom: 0 }}>
+                  <label className="field-label" htmlFor="prod-qty">
+                    {t('initial_qty_label')} (pcs) *
+                  </label>
+                  <input
+                    id="prod-qty"
+                    type="number"
+                    step="1"
+                    min="1"
+                    className="field-input"
+                    placeholder="e.g. 50"
+                    value={quantity}
+                    onChange={(e) => handleQuantityChange(e.target.value)}
+                    required
+                  />
+                </div>
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="prod-weight">
-                {t('total_weight_label')}
-              </label>
-              <input
-                id="prod-weight"
-                type="number"
-                step="0.01"
-                min="0"
-                className="field-input"
-                placeholder="e.g. 15.00"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                required
-              />
+                <div className="field-group" style={{ marginBottom: 0 }}>
+                  <label className="field-label" htmlFor="prod-piece-weight">
+                    {t('piece_weight_label')}
+                  </label>
+                  <input
+                    id="prod-piece-weight"
+                    type="number"
+                    step="0.001"
+                    min="0.001"
+                    className="field-input"
+                    placeholder="e.g. 0.75"
+                    value={pieceWeight}
+                    onChange={(e) => handlePieceWeightChange(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="field-group" style={{ marginBottom: 0 }}>
+                  <label className="field-label" htmlFor="prod-weight">
+                    {t('total_weight_label')}
+                  </label>
+                  <input
+                    id="prod-weight"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="field-input"
+                    placeholder="e.g. 37.50"
+                    value={weight}
+                    onChange={(e) => handleWeightChange(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Automatic Multiplication Preview Pill */}
+              {parseFloat(quantity) > 0 && parseFloat(pieceWeight) > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '7px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(93, 95, 239, 0.12)',
+                  border: '1px solid rgba(93, 95, 239, 0.3)',
+                  color: 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  marginBottom: '14px',
+                }}>
+                  <span style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    ⚡ {t('auto_calc_total')} :
+                  </span>
+                  <span>
+                    {quantity} pcs × {pieceWeight} kg = <strong style={{ color: '#10b981', fontSize: '12px' }}>{weight} kg</strong>
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="dual-field-row" style={{ marginBottom: '12px' }}>
+              <div className="field-group" style={{ marginBottom: 0 }}>
+                <label className="field-label" htmlFor="prod-qty">
+                  {t('initial_qty_label')} (kg) *
+                </label>
+                <input
+                  id="prod-qty"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  className="field-input"
+                  placeholder="e.g. 25.50"
+                  value={quantity}
+                  onChange={(e) => handleQuantityChange(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="field-group" style={{ marginBottom: 0 }}>
+                <label className="field-label" htmlFor="prod-weight">
+                  {t('total_weight_label')}
+                </label>
+                <input
+                  id="prod-weight"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="field-input"
+                  placeholder="e.g. 25.50"
+                  value={weight}
+                  onChange={(e) => handleWeightChange(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           <div className="field-group">

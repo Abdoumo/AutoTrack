@@ -204,9 +204,22 @@ export default function ProductCard({ product, onTake, onEdit, onDelete, onAdjus
             fontSize: '11px',
             color: 'var(--text-muted)',
           }}>
-            <span>{t('product_weight')}</span>
+            <span>{product.unit === 'piece' ? t('col_piece_weight') : t('product_weight')}</span>
             <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>
-              {product.weight} kg
+              {product.unit === 'piece' ? (
+                <>
+                  <strong style={{ color: 'var(--text-primary)' }}>
+                    {product.piece_weight !== undefined && product.piece_weight !== null && Number(product.piece_weight) > 0
+                      ? Number(product.piece_weight)
+                      : (parseFloat(product.quantity) > 0 ? (parseFloat(product.weight) / parseFloat(product.quantity)).toFixed(2) : '0')} kg
+                  </strong>
+                  <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>
+                    (Total : {product.weight} kg)
+                  </span>
+                </>
+              ) : (
+                `${product.weight} kg`
+              )}
             </span>
           </div>
         </div>
