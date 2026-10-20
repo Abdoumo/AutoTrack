@@ -17,6 +17,21 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const handleDemoLogin = async (demoEmail) => {
+    setError('');
+    setEmail(demoEmail);
+    setPassword('demo1234');
+    try {
+      setSubmitting(true);
+      const res = await api.login(demoEmail, 'demo1234');
+      login(res.user, res.token);
+    } catch (err) {
+      setError(err.message || (lang === 'fr' ? 'Échec de connexion.' : 'Authentication failed.'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -269,12 +284,102 @@ export default function LoginScreen() {
                   fontSize: '11px',
                   textDecoration: 'underline',
                   cursor: 'pointer',
+                  border: 'none',
                 }}
               >
                 {mode === 'login' ? t('auth_no_account') : t('auth_have_account')}
               </button>
             </div>
           </form>
+
+          {/* Quick Demo Login Shortcuts */}
+          <div style={{
+            marginTop: '22px',
+            paddingTop: '16px',
+            borderTop: '1px solid var(--border-subtle)',
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              marginBottom: '10px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              fontWeight: '600',
+            }}>
+              <span>⚡</span>
+              <span>{lang === 'fr' ? 'Accès Démo 1-Clic' : '1-Click Demo Access'}</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('bedoushop@gmail.com')}
+                disabled={submitting}
+                style={{
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  background: 'rgba(99, 102, 241, 0.1)',
+                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)'; }}
+              >
+                <span>🛡️ Super Admin</span>
+                <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>bedoushop@gmail.com</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('nadia@store.com')}
+                disabled={submitting}
+                style={{
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'; }}
+              >
+                <span>👤 {lang === 'fr' ? 'Utilisateur' : 'User'}</span>
+                <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>nadia@store.com</span>
+              </button>
+            </div>
+
+            <p style={{
+              textAlign: 'center',
+              fontSize: '10px',
+              color: 'var(--text-muted)',
+              marginTop: '10px',
+              fontStyle: 'italic',
+            }}>
+              {lang === 'fr' 
+                ? 'Fonctionne sans base de données locale (mode stockage navigateur).'
+                : 'Runs without local database (browser storage mode).'}
+            </p>
+          </div>
         </div>
       </div>
 
